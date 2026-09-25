@@ -5,83 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Round 1 | Guess Who Am I?</title>
     <link rel="stylesheet" href="/css/app.css">
+    <script src="/js/sfx.js" defer></script>
     <script src="/js/abilities.js" defer></script>
     <script src="/js/game1.js" defer></script>
 </head>
 <body class="game-page">
+    <div class="bg-shapes" aria-hidden="true">
+        <span class="tri"></span><span class="circle"></span><span class="square"></span>
+        <span class="diamond"></span><span class="circle"></span><span class="square"></span>
+    </div>
+
     <header class="game-header">
-        <a class="game-logo" href="/pages/menu.html"><span>G</span> Guess Who Am I?</a>
-        <span class="round-tag">ROUND 1 / TEXT CLUES</span>
+        <a class="game-logo" href="/pages/menu.html"><span class="logo-mark">?</span><span class="logo-text">Guess Who Am I?</span></a>
+        <span class="round-tag">Round 1 · Text Clues</span>
+        <div class="player-chip"><span class="chip-avatar" id="playerAvatar">🙂</span><strong id="playerLabel"></strong></div>
     </header>
 
     <main class="game-shell" id="gameShell" hidden>
-        <div class="game-topline">
-            <div><span class="eyebrow">PLAYER</span><strong id="playerLabel"></strong></div>
-            <div><span class="eyebrow">QUESTION</span><strong id="questionCount">01 / 12</strong></div>
-            <div><span class="eyebrow">TIME LEFT</span><strong id="timerDisplay">10s</strong></div>
+        <div class="hud">
+            <div class="hud-pill"><span class="eyebrow">Question</span><strong id="questionCount">1 / 12</strong></div>
+            <div class="timer-circle" aria-label="Time left"><strong id="timerDisplay">10</strong></div>
+            <div class="hud-pill"><span class="eyebrow">Score</span><strong id="scoreDisplay">0</strong></div>
         </div>
-        <div class="game-progress"><div id="questionProgress"></div></div>
-
-        <section class="game-stats" aria-label="Current game statistics">
-            <div><span class="eyebrow">SCORE</span><strong id="scoreDisplay">0</strong> pts</div>
-            <div><span class="eyebrow">STREAK</span><strong id="streakDisplay">0</strong></div>
-            <div><span class="eyebrow">MULTIPLIER</span><strong id="multiplierDisplay">1.0x</strong></div>
-        </section>
+        <div class="game-progress" aria-hidden="true"><div id="questionProgress"></div></div>
 
         <section class="suspect-card" aria-labelledby="suspectHeading">
-            <p class="eyebrow" id="suspectHeading">INCOMING MESSAGE / SUSPECT <span id="suspectNumber">01</span></p>
-            <blockquote id="suspectText"></blockquote>
+            <div class="suspect-head">
+                <span class="suspect-avatar" aria-hidden="true">?</span>
+                <div>
+                    <strong id="suspectHeading">Mystery Sender #<span id="suspectNumber">01</span></strong>
+                    <small>sent you a message…</small>
+                </div>
+            </div>
+            <blockquote class="msg-bubble" id="suspectText"></blockquote>
+            <div class="timer-track" aria-hidden="true"><div id="timerBar"></div></div>
             <p class="analysis-hint" id="analysisHint" hidden></p>
         </section>
 
-        <section class="ability-panel" aria-labelledby="abilityHeading">
-            <div class="section-heading"><h2 id="abilityHeading">YOUR POWERS</h2><span>Use each one time</span></div>
-            <div class="ability-actions" id="abilityActions"></div>
-        </section>
+        <div class="streak-row" id="streakRow">
+            <span class="streak-chip">🔥 Streak <strong id="streakDisplay">0</strong></span>
+            <span class="streak-chip">✖️ Bonus <strong id="multiplierDisplay">1.0x</strong></span>
+        </div>
 
         <section class="answer-panel" aria-labelledby="answerHeading">
-            <h2 id="answerHeading">WHO WROTE THIS?</h2>
+            <h2 class="panel-title" id="answerHeading">Who wrote this?</h2>
             <div class="answer-grid">
-                <button type="button" class="answer-btn human" id="answerHuman">HUMAN</button>
-                <button type="button" class="answer-btn ai" id="answerAi">AI</button>
+                <button type="button" class="btn-3d answer-btn human" id="answerHuman"><span class="answer-emoji" aria-hidden="true">🧑</span>Human</button>
+                <button type="button" class="btn-3d answer-btn ai" id="answerAi"><span class="answer-emoji" aria-hidden="true">🤖</span>AI</button>
             </div>
         </section>
 
+        <section class="ability-panel" aria-labelledby="abilityHeading">
+            <h2 class="panel-title" id="abilityHeading">Power-ups <small>one use each</small></h2>
+            <div class="ability-actions" id="abilityActions"></div>
+        </section>
     </main>
 
-    <div class="modal-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
-        <div class="modal-card feedback-card" aria-live="polite">
-            <p class="eyebrow">QUESTION RESULT</p>
+    <div class="modal-backdrop feedback-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
+        <div class="feedback-card" aria-live="polite">
+            <div class="feedback-icon" id="feedbackIcon" aria-hidden="true">✅</div>
             <h1 id="feedbackTitle"></h1>
+            <p class="feedback-points" id="feedbackPoints"></p>
             <p id="feedbackText"></p>
             <div class="feedback-countdown"><span id="feedbackCountdownLabel">Next question in</span><strong id="feedbackSeconds">5</strong><span>seconds</span></div>
-            <button type="button" class="primary-btn feedback-next" id="feedbackNextButton">NEXT QUESTION</button>
+            <button type="button" class="btn-3d primary-btn feedback-next" id="feedbackNextButton">Next question</button>
         </div>
     </div>
 
     <div class="modal-backdrop" id="recoveryModal" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle" hidden>
-        <div class="modal-card">
-            <p class="eyebrow">REDEMPTION PROTOCOL</p>
-            <h1 id="recoveryTitle">System Recovery</h1>
-            <p>Try one question you missed. Get it right to earn 50 points.</p>
+        <div class="modal-card recovery-card">
+            <span class="eyebrow pill-eyebrow">Bonus chance</span>
+            <h1 id="recoveryTitle">🎁 Second Chance!</h1>
+            <p>Try one question you missed. Get it right to win 50 extra points.</p>
             <p class="eyebrow" id="recoveryQuestionLabel"></p>
             <blockquote class="recovery-text" id="recoveryText"></blockquote>
             <div class="answer-grid">
-                <button type="button" class="answer-btn human" id="recoveryHuman">HUMAN</button>
-                <button type="button" class="answer-btn ai" id="recoveryAi">AI</button>
+                <button type="button" class="btn-3d answer-btn human" id="recoveryHuman"><span class="answer-emoji" aria-hidden="true">🧑</span>Human</button>
+                <button type="button" class="btn-3d answer-btn ai" id="recoveryAi"><span class="answer-emoji" aria-hidden="true">🤖</span>AI</button>
             </div>
         </div>
     </div>
 
     <div class="modal-backdrop" id="finalModal" role="dialog" aria-modal="true" aria-labelledby="finalTitle" hidden>
-        <div class="modal-card">
-            <p class="eyebrow">ROUND 1 COMPLETE</p>
+        <div class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="modal-card final-card">
+            <div class="trophy" aria-hidden="true">🏆</div>
+            <span class="eyebrow pill-eyebrow">Round 1 complete</span>
             <h1 id="finalTitle"></h1>
+            <div class="final-stars" id="finalStars" aria-hidden="true"></div>
             <p id="finalSummary"></p>
             <div class="final-score"><strong id="finalScore">0</strong><span>POINTS</span></div>
-            <div class="final-breakdown" id="finalBreakdown"></div>
-            <a class="primary-btn" id="continueButton" href="/pages/chat.html">CONTINUE TO ROUND 2</a>
-            <a class="secondary-link" href="/pages/menu.html">PLAY AGAIN</a>
+            <div class="stat-grid" id="finalBreakdown">
+                <div class="stat-box good"><strong id="finalCorrect">0</strong><span>Correct</span></div>
+                <div class="stat-box bad"><strong id="finalWrong">0</strong><span>Missed</span></div>
+                <div class="stat-box"><strong id="finalRecovery">–</strong><span>Bonus</span></div>
+            </div>
+            <a class="btn-3d primary-btn" id="continueButton" href="/pages/chat.html">Continue to Round 2 💬</a>
+            <a class="secondary-link" href="/pages/menu.html">Play again</a>
         </div>
     </div>
 </body>

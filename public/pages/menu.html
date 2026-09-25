@@ -4,59 +4,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu - Guess Who Am I?</title>
+    <title>Guess Who Am I?</title>
     <link rel="stylesheet" href="/css/app.css">
 </head>
 
 <body class="menu-page">
-
-    <div class="top-bar">
+    <div class="bg-shapes" aria-hidden="true">
+        <span class="tri"></span><span class="circle"></span><span class="square"></span>
+        <span class="diamond"></span><span class="circle"></span><span class="square"></span>
     </div>
 
-    <div class="container">
-        <div class="panel">
-            <div class="input-header">
-                <span>Your in-game name is...</span>
-                <div class="input-header-icon">i</div>
-            </div>
+    <main class="menu-wrap">
+        <header class="brand">
+            <div class="brand-badge" aria-hidden="true">🕵️</div>
+            <h1 class="brand-title">Guess <span>Who</span> Am I?</h1>
+            <p class="brand-tag">Human or AI? Can you spot the difference?</p>
+        </header>
 
+        <section class="join-card" aria-label="Join the game">
+            <button type="button" class="avatar-btn" id="avatarButton" aria-label="Change your avatar">🦊</button>
+            <span class="avatar-hint">Tap to change your avatar</span>
+
+            <label class="field-label" for="playerName">Your nickname</label>
             <div class="input-wrapper" id="inputWrapper">
-                <input type="text" id="playerName" placeholder="Enter name">
-                <button type="button" class="refresh-btn" id="clearNameButton" aria-label="Clear name">↻</button>
+                <input type="text" id="playerName" placeholder="Enter nickname" maxlength="16" autocomplete="off">
+                <button type="button" class="refresh-btn" id="clearNameButton" aria-label="Clear name">✕</button>
             </div>
-            <div class="error-msg" id="errorMsg">Please enter a nickname to start!</div>
+            <div class="error-msg" id="errorMsg">Oops! Type a nickname first 😊</div>
 
-            <button type="button" class="start-btn" id="startButton">START</button>
-        </div>
+            <button type="button" class="btn-3d primary-btn start-btn" id="startButton">Let's Play! 🚀</button>
+        </section>
 
-        <div class="settings-title">Settings</div>
+        <section class="how-to" aria-label="How to play">
+            <div class="how-step"><b>⚡</b>Pick 2 power-ups</div>
+            <div class="how-step"><b>💬</b>Round 1: guess 12 messages</div>
+            <div class="how-step"><b>🤖</b>Round 2: chat with a stranger</div>
+        </section>
 
         <div class="setting-row">
-            <div class="setting-label">
-                <svg class="setting-icon" viewBox="0 0 24 24">
-                    <path
-                        d="M9 18.5c0 1.93-1.57 3.5-3.5 3.5S2 20.43 2 18.5 3.57 15 5.5 15c.66 0 1.28.18 1.81.5V3h14v11.5c0 1.93-1.57 3.5-3.5 3.5S14 16.43 14 14.5s1.57-3.5 3.5-3.5c.66 0 1.28.18 1.81.5V7h-10v11.5z" />
-                </svg>
-                Sound effects
-            </div>
+            <span>🔊 Sound effects</span>
             <label class="switch">
-                <input type="checkbox" checked>
+                <input type="checkbox" id="soundToggle" checked aria-label="Sound effects">
                 <span class="slider"></span>
             </label>
         </div>
-    </div>
+    </main>
 
     <div class="modal-backdrop" id="loadoutModal" role="dialog" aria-modal="true" aria-labelledby="loadoutTitle" hidden>
         <div class="modal-card wide">
-            <p class="eyebrow">PRE-GAME / ROUND 1</p>
-            <h1 id="loadoutTitle">Choose 2 powers</h1>
-            <p>Pick any 2 powers before you play. You can use each power one time.</p>
+            <button type="button" class="close-btn" id="loadoutClose" aria-label="Back">✕</button>
+            <span class="eyebrow pill-eyebrow">Get ready!</span>
+            <h1 id="loadoutTitle">Choose 2 power-ups ⚡</h1>
+            <p>Each power-up works one time in Round 1. Choose wisely!</p>
             <div class="loadout-grid" id="loadoutGrid"></div>
             <p class="selection-count" id="selectionCount">0 of 2 selected</p>
-            <button type="button" class="primary-btn" id="beginButton" disabled>BEGIN ROUND 1</button>
+            <button type="button" class="btn-3d primary-btn" id="beginButton" disabled>Start Round 1</button>
         </div>
     </div>
 
+    <script src="/js/sfx.js"></script>
     <script src="/js/abilities.js"></script>
     <script src="/js/menu.js"></script>
 </body>

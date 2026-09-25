@@ -3,84 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guess Who Am I? — Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Round 2 | Guess Who Am I?</title>
+    <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/chat.css">
 </head>
-<body>
-
-    <div class="top-bar">
-        <div class="top-bar-logo"><span>G</span> Guess Who Am I?</div>
-        <div class="timer-badge" id="timerBadge"><span id="timerDisplay">2:00</span></div>
+<body class="chat-page">
+    <div class="bg-shapes" aria-hidden="true">
+        <span class="tri"></span><span class="circle"></span><span class="square"></span>
+        <span class="diamond"></span><span class="circle"></span><span class="square"></span>
     </div>
 
-    <div class="progress-wrap">
-        <div class="progress-meta">
-            <span>Time Remaining</span>
-            <span id="progressLabel">120s</span>
-        </div>
-        <div class="progress-bar-track">
-            <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-    </div>
+    <header class="game-header">
+        <a class="game-logo" href="/pages/menu.html"><span class="logo-mark">?</span><span class="logo-text">Guess Who Am I?</span></a>
+        <span class="round-tag">Round 2 · Live Chat</span>
+        <div class="timer-badge" id="timerBadge">⏱️ <span id="timerDisplay">2:00</span></div>
+    </header>
 
-    <div class="main">
+    <main class="chat-main">
+        <div class="chat-progress">
+            <div class="progress-meta">
+                <span>Time remaining</span>
+                <span id="progressLabel">120s</span>
+            </div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+        </div>
 
         <div id="preGame">
-            <div class="pre-title">Get ready to interrogate!</div>
-            <div class="pre-sub">Chat for 120 seconds, then decide — human or AI?</div>
+            <div class="radar" aria-hidden="true"><span>🔎</span></div>
+            <div class="pre-title">Finding a mystery stranger…</div>
+            <div class="pre-sub">Chat for 2 minutes, then decide: human or AI?</div>
         </div>
 
         <div id="gameArea">
             <div class="chat-card">
                 <div class="chat-card-header">
-                    <div class="chat-avatar">G</div>
+                    <div class="chat-avatar" aria-hidden="true">?</div>
                     <div class="chat-header-info">
                         <div class="chat-header-name" id="opponentName">Connecting...</div>
-                        <div class="chat-header-sub">Human or AI? You decide.</div>
+                        <div class="chat-header-sub">Human or AI? You decide!</div>
                     </div>
-                    <div class="status-dot"></div>
+                    <div class="status-dot" aria-hidden="true"></div>
                 </div>
-                <div id="chatBox">
+                <div id="chatBox" aria-live="polite">
                     <div class="empty-state" id="emptyState">
-                        <div class="empty-state-text">Send your first message to start!</div>
+                        <div class="empty-state-icon" aria-hidden="true">👋</div>
+                        <div class="empty-state-text">Say hi to start the chat!</div>
                     </div>
                     <div class="typing-indicator" id="typingIndicator">
                         <div class="typing-dots"><span></span><span></span><span></span></div>
                     </div>
                 </div>
                 <div class="input-bar">
-                    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off" disabled>
-                    <button id="sendBtn" disabled>
-                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off" maxlength="300" disabled aria-label="Message">
+                    <button id="sendBtn" class="btn-3d" disabled aria-label="Send">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                     </button>
                 </div>
             </div>
+            <p class="chat-tip">💡 Tip: Ask about feelings, jokes, or things only a real person would know!</p>
         </div>
+    </main>
 
-    </div>
-
-    <div class="result-overlay" id="guessOverlay">
-        <div class="result-card">
-            <div class="result-title">Time's up!</div>
-            <div class="result-sub">Were you chatting with a human or an AI? Guess right for +500 points.</div>
-            <div class="guess-row">
-                <button class="guess-btn human" id="guessHuman">HUMAN</button>
-                <button class="guess-btn ai" id="guessAI">AI</button>
+    <div class="modal-backdrop" id="guessOverlay" hidden>
+        <div class="modal-card">
+            <div class="trophy" aria-hidden="true">⏰</div>
+            <h1>Time's up!</h1>
+            <p>Were you chatting with a human or an AI? Guess right for +500 points!</p>
+            <div class="answer-grid guess-grid">
+                <button type="button" class="btn-3d answer-btn human" id="guessHuman"><span class="answer-emoji" aria-hidden="true">🧑</span>Human</button>
+                <button type="button" class="btn-3d answer-btn ai" id="guessAI"><span class="answer-emoji" aria-hidden="true">🤖</span>AI</button>
             </div>
         </div>
     </div>
 
-    <div class="result-overlay" id="resultOverlay">
-        <div class="result-card">
-            <div class="result-title" id="resultTitle">Correct!</div>
-            <div class="result-sub" id="resultSub"></div>
-            <div class="result-score" id="resultScore"></div>
-            <button class="result-play-again" id="playAgainButton">Play Again</button>
+    <div class="modal-backdrop" id="resultOverlay" hidden>
+        <div class="confetti" id="resultConfetti" aria-hidden="true" hidden><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="modal-card final-card">
+            <div class="trophy" id="resultIcon" aria-hidden="true">🎉</div>
+            <h1 id="resultTitle">Correct!</h1>
+            <p id="resultSub"></p>
+            <div class="final-score"><strong id="resultTotal">0</strong><span>TOTAL POINTS</span></div>
+            <div class="stat-grid">
+                <div class="stat-box"><strong id="resultRound1">0</strong><span>Round 1</span></div>
+                <div class="stat-box"><strong id="resultRound2">0</strong><span>Round 2</span></div>
+                <div class="stat-box"><strong id="resultMessages">0</strong><span>Messages</span></div>
+            </div>
+            <button type="button" class="btn-3d primary-btn" id="playAgainButton">Play again 🔁</button>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/sfx.js"></script>
     <script src="/js/chat.js" defer></script>
 </body>
 </html>

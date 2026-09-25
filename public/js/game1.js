@@ -19,6 +19,13 @@ const questions = [
     { id: 12, text: 'Thank you for sharing your perspective. While both options have merits, the best choice depends on your goals, available time, and preferred learning style.', answer: 'ai', explanation: 'It gives a careful answer without picking a side.', hint: 'The writer talks about both choices but never picks one.' }
 ];
 
+const FEEDBACK_STYLES = {
+    correct: { title: 'Correct!', icon: '✅', sound: 'correct' },
+    wrong: { title: 'Oops!', icon: '❌', sound: 'wrong' },
+    timeout: { title: "Time's up!", icon: '⏰', sound: 'wrong' },
+    skip: { title: 'Skipped!', icon: '⏭️', sound: 'click' }
+};
+
 let currentQuestionIndex = 0;
 let score = 0;
 let streak = 0;
@@ -39,6 +46,8 @@ let recoveryResult = 'none';
 
 const $ = id => document.getElementById(id);
 const playerName = params.get('player')?.trim() || '';
+const playerAvatar = params.get('avatar') || '🙂';
+const playSound = name => window.sfx?.play(name);
 
 function calculateMultiplier() {
     return streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
@@ -48,6 +57,7 @@ function updateStats() {
     $('scoreDisplay').textContent = score;
     $('streakDisplay').textContent = streak;
     $('multiplierDisplay').textContent = multiplier.toFixed(1) + 'x';
+    $('streakRow').classList.toggle('hot', streak >= 3);
 }
 
 function renderAbilities() {
@@ -56,9 +66,10 @@ function renderAbilities() {
     for (const id of selectedAbilities) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'ability-btn' + ((id === 'firewall' && activeFirewall) || (id === 'overclock' && activeOverclock) ? ' active' : '');
+        const active = (id === 'firewall' && activeFirewall) || (id === 'overclock' && activeOverclock);
+        button.className = `btn-3d ability-btn power-${id}` + (active ? ' active' : '') + (usedAbilities.has(id) ? ' used' : '');
         const label = document.createElement('span');
-        label.textContent = `${abilities[id].name}${usedAbilities.has(id) ? ' / USED' : ''}`;
+        label.textContent = `${abilities[id].name}${active ? ' ✓' : ''}`;
         button.append(window.createAbilityIcon(id), label);
         button.disabled = phase !== 'question' || usedAbilities.has(id);
         button.addEventListener('click', () => useAbility(id));
@@ -69,10 +80,11 @@ function renderAbilities() {
 function useAbility(id) {
     if (phase !== 'question' || !selectedAbilities.has(id) || usedAbilities.has(id)) return;
     usedAbilities.add(id);
+    playSound('select');
     if (id === 'firewall') activeFirewall = true;
     if (id === 'overclock') activeOverclock = true;
     if (id === 'lieDetector') {
-        $('analysisHint').textContent = `CLUE: ${questions[currentQuestionIndex].hint}`;
+        $('analysisHint').textContent = `🔍 Clue: ${questions[currentQuestionIndex].hint}`;
         $('analysisHint').hidden = false;
     }
     if (id === 'override') {
@@ -80,7 +92,7 @@ function useAbility(id) {
         score += BASE_POINTS;
         streak = 0;
         multiplier = 1;
-        completeQuestion('QUESTION SKIPPED', '+100 points. Your streak has ended.');
+        completeQuestion('skip', `+${BASE_POINTS}`, 'You skipped this one. Your streak has ended.');
     } else renderAbilities();
 }
 
@@ -99,12 +111,18 @@ function stopFeedbackTimer() {
 function startTimer() {
     stopTimer();
     const deadline = Date.now() + QUESTION_SECONDS * 1000;
+    let lastShown = QUESTION_SECONDS;
     $('timerDisplay').classList.remove('urgent');
-    $('timerDisplay').textContent = `${QUESTION_SECONDS}s`;
+    $('timerDisplay').textContent = QUESTION_SECONDS;
+    $('timerBar').style.width = '100%';
     timerId = setInterval(() => {
-        const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-        $('timerDisplay').textContent = `${remaining}s`;
+        const msLeft = Math.max(0, deadline - Date.now());
+        const remaining = Math.ceil(msLeft / 1000);
+        $('timerDisplay').textContent = remaining;
         $('timerDisplay').classList.toggle('urgent', remaining <= 3);
+        $('timerBar').style.width = `${msLeft / (QUESTION_SECONDS * 1000) * 100}%`;
+        if (remaining !== lastShown && remaining > 0 && remaining <= 3) playSound('tick');
+        lastShown = remaining;
         if (remaining === 0) submitAnswer(null);
     }, 100);
 }
@@ -114,9 +132,8 @@ function loadQuestion() {
     activeFirewall = false;
     activeOverclock = false;
     const question = questions[currentQuestionIndex];
-    const number = String(question.id).padStart(2, '0');
-    $('questionCount').textContent = `${number} / ${questions.length}`;
-    $('suspectNumber').textContent = number;
+    $('questionCount').textContent = `${question.id} / ${questions.length}`;
+    $('suspectNumber').textContent = String(question.id).padStart(2, '0');
     $('questionProgress').style.width = `${(currentQuestionIndex + 1) / questions.length * 100}%`;
     $('suspectText').textContent = question.text;
     $('analysisHint').hidden = true;
@@ -129,20 +146,27 @@ function loadQuestion() {
     startTimer();
 }
 
-function completeQuestion(title, message) {
+function completeQuestion(kind, points, message) {
     phase = 'feedback';
     stopTimer();
+    const style = FEEDBACK_STYLES[kind];
+    const modal = $('feedbackModal');
     $('answerHuman').disabled = true;
     $('answerAi').disabled = true;
-    $('feedbackTitle').textContent = title;
+    modal.classList.remove('correct', 'wrong', 'timeout', 'skip');
+    modal.classList.add(kind);
+    $('feedbackIcon').textContent = style.icon;
+    $('feedbackTitle').textContent = style.title;
+    $('feedbackPoints').textContent = points;
     $('feedbackText').textContent = message;
-    $('feedbackModal').hidden = false;
+    modal.hidden = false;
+    playSound(style.sound);
     $('feedbackCountdownLabel').textContent = currentQuestionIndex === questions.length - 1
-        ? (failedQuestions.length ? 'Recovery starts in' : 'Results in')
+        ? (failedQuestions.length ? 'Bonus chance in' : 'Results in')
         : 'Next question in';
     $('feedbackNextButton').textContent = currentQuestionIndex === questions.length - 1
-        ? (failedQuestions.length ? 'START RECOVERY' : 'SEE RESULTS')
-        : 'NEXT QUESTION';
+        ? (failedQuestions.length ? 'Bonus chance 🎁' : 'See results 🏆')
+        : 'Next question ➜';
     $('feedbackSeconds').textContent = FEEDBACK_SECONDS;
     const deadline = Date.now() + FEEDBACK_SECONDS * 1000;
     feedbackTickId = setInterval(() => {
@@ -162,16 +186,17 @@ function submitAnswer(choice) {
         multiplier = calculateMultiplier();
         const points = BASE_POINTS * multiplier * (activeOverclock ? 2 : 1);
         score += points;
-        completeQuestion('CORRECT', `+${points} points. ${question.explanation}`);
+        const streakNote = streak >= 3 ? ` 🔥 ${streak} in a row!` : '';
+        completeQuestion('correct', `+${points}`, question.explanation + streakNote);
     } else {
         failedQuestions.push({ id: question.id, text: question.text, answer: question.answer, explanation: question.explanation });
         if (activeOverclock || !activeFirewall || choice === null) {
             streak = 0;
             multiplier = 1;
         }
-        const prefix = choice === null ? 'Time is up.' : 'Wrong answer.';
-        const protection = activeFirewall && !activeOverclock && choice !== null ? ' Firewall kept your streak.' : '';
-        completeQuestion('INCORRECT', `${prefix} The answer was ${question.answer.toUpperCase()}. ${question.explanation}${protection}`);
+        const protection = activeFirewall && !activeOverclock && choice !== null ? ' 🛡️ Firewall kept your streak!' : '';
+        const answerLabel = question.answer === 'ai' ? 'AI 🤖' : 'HUMAN 🧑';
+        completeQuestion(choice === null ? 'timeout' : 'wrong', '+0', `It was ${answerLabel}. ${question.explanation}${protection}`);
     }
 }
 
@@ -192,7 +217,7 @@ function nextQuestion() {
 function startRecovery() {
     phase = 'recovery';
     recoveryQuestion = failedQuestions[Math.floor(Math.random() * failedQuestions.length)];
-    $('recoveryQuestionLabel').textContent = `QUESTION ${String(recoveryQuestion.id).padStart(2, '0')}`;
+    $('recoveryQuestionLabel').textContent = `Question ${recoveryQuestion.id}`;
     $('recoveryText').textContent = recoveryQuestion.text;
     $('recoveryModal').hidden = false;
 }
@@ -205,7 +230,11 @@ function submitRecovery(choice) {
     if (choice === recoveryQuestion.answer) {
         score += BASE_POINTS / 2;
         recoveryResult = 'Recovered 50 points';
-    } else recoveryResult = 'Recovery missed';
+        playSound('correct');
+    } else {
+        recoveryResult = 'Recovery missed';
+        playSound('wrong');
+    }
     $('recoveryModal').hidden = true;
     showFinal();
 }
@@ -213,14 +242,25 @@ function submitRecovery(choice) {
 function showFinal() {
     phase = 'final';
     const perfect = failedQuestions.length === 0;
-    $('finalTitle').textContent = perfect ? 'Perfect Score Victory' : 'Mission Complete';
+    const stars = correctAnswers >= 11 ? 3 : correctAnswers >= 7 ? 2 : correctAnswers >= 3 ? 1 : 0;
+    $('finalTitle').textContent = perfect ? 'Perfect Score Victory' : ['Nice try!', 'Good job!', 'Great job!', 'Amazing!'][stars];
+    $('finalStars').replaceChildren(...[0, 1, 2].map(i => {
+        const star = document.createElement('span');
+        star.textContent = '⭐';
+        if (i >= stars) star.className = 'off';
+        return star;
+    }));
     $('finalSummary').textContent = perfect
-        ? 'You finished all 12 questions without a wrong answer.'
-        : 'You have finished your extra question.';
+        ? 'You got all 12 questions right. You are a real AI detective!'
+        : `You got ${correctAnswers} out of ${questions.length} right. Ready for the live chat?`;
     $('finalScore').textContent = score;
-    $('finalBreakdown').textContent = `${correctAnswers} correct / ${failedQuestions.length} incorrect / ${recoveryResult}`;
-    $('continueButton').href = `/pages/chat.html?player=${encodeURIComponent(playerName)}&g1score=${score}&g1total=${questions.length}`;
+    $('finalCorrect').textContent = correctAnswers;
+    $('finalWrong').textContent = failedQuestions.length;
+    $('finalRecovery').textContent = recoveryResult === 'Recovered 50 points' ? '+50' : recoveryResult === 'Recovery missed' ? '✗' : '–';
+    const next = new URLSearchParams({ player: playerName, avatar: playerAvatar, g1score: score, g1total: questions.length });
+    $('continueButton').href = `/pages/chat.html?${next.toString()}`;
     $('finalModal').hidden = false;
+    playSound('win');
 }
 
 function beginGame() {
@@ -233,6 +273,7 @@ if (!playerName || selectedAbilities.size !== 2) {
     window.location.href = '/pages/menu.html';
 } else {
     $('playerLabel').textContent = playerName;
+    $('playerAvatar').textContent = playerAvatar;
     beginGame();
 }
 $('answerHuman').addEventListener('click', () => submitAnswer('human'));
