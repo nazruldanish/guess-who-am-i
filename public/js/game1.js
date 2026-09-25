@@ -1,0 +1,242 @@
+const BASE_POINTS = 100;
+const QUESTION_SECONDS = 10;
+const FEEDBACK_SECONDS = 5;
+
+const abilities = window.ABILITY_DEFINITIONS;
+
+const questions = [
+    { id: 1, text: 'aiyoo benda ni susah gila ah. aku dah cuba 3 kali still salah. rasa nak buang laptop terus. ke kau ada idea lain tak?', answer: 'human', explanation: 'This sounds like someone chatting while upset.', hint: 'The writer sounds upset and uses short, casual words.' },
+    { id: 2, text: 'In Malaysia, various culinary traditions have converged over centuries, resulting in a diverse gastronomic landscape. Dishes such as Nasi Lemak, Char Kway Teow, and Roti Canai represent a harmonious blend of influences.', answer: 'ai', explanation: 'It sounds like a neat report, not a quick chat.', hint: 'The words sound very formal for a chat message.' },
+    { id: 3, text: 'weh aku tadi nampak kau kat mamak tapi kau tak perasan. aku dah lambai-lambai macam orang gila. malu gila do', answer: 'human', explanation: 'This tells a funny, personal story about seeing a friend.', hint: 'The writer talks about something that just happened to them.' },
+    { id: 4, text: 'To address your query, an effective study strategy involves spaced repetition, active recall, and adequate rest. Reviewing material at increasing intervals can support long-term retention.', answer: 'ai', explanation: 'It sounds like a prepared answer to a question.', hint: 'The first words sound like a school report.' },
+    { id: 5, text: 'bro kau ingat tak masa form 3 kita main bola hujan-hujan sampai cikgu marah? best gila. rindu ah zaman tu', answer: 'human', explanation: 'The writer remembers a day they shared with a friend.', hint: 'The writer expects their friend to remember the same day.' },
+    { id: 6, text: 'Certainly! Here are three practical ways to prepare for your presentation: outline your key points, rehearse aloud, and leave time for questions.', answer: 'ai', explanation: 'The tidy list sounds like advice from an AI helper.', hint: 'The advice is packed into a neat list.' },
+    { id: 7, text: 'aku dah sampai depan library. eh silap, depan cafe sebelah library. kau kat mana?', answer: 'human', explanation: 'The writer fixes a mistake while sending a quick update.', hint: 'The writer corrects their location in the same message.' },
+    { id: 8, text: 'The event offers an opportunity for students to connect, exchange ideas, and cultivate meaningful relationships within a supportive campus environment.', answer: 'ai', explanation: 'This sounds like a poster. It gives no personal details.', hint: 'It sounds like an ad for a school event.' },
+    { id: 9, text: 'sorry lambat reply, tertidur dalam bas tadi. nasib driver kejut aku kalau tak sampai terminal', answer: 'human', explanation: 'The writer tells a small story about falling asleep on a bus.', hint: 'There is a clear reason for the late reply.' },
+    { id: 10, text: 'If you are feeling overwhelmed, consider breaking your tasks into smaller steps and prioritizing the most urgent item first. Remember to take regular breaks.', answer: 'ai', explanation: 'This advice could be given to almost anyone.', hint: 'The advice is helpful but does not mention anything personal.' },
+    { id: 11, text: 'weh siapa ambik charger aku kat studio? cable dia dah koyak sikit tu, jangan buat-buat tak nampak', answer: 'human', explanation: 'The writer is upset about their own charger.', hint: 'The writer knows a small detail about the charger.' },
+    { id: 12, text: 'Thank you for sharing your perspective. While both options have merits, the best choice depends on your goals, available time, and preferred learning style.', answer: 'ai', explanation: 'It gives a careful answer without picking a side.', hint: 'The writer talks about both choices but never picks one.' }
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+let streak = 0;
+let multiplier = 1;
+const params = new URLSearchParams(window.location.search);
+let selectedAbilities = new Set((params.get('abilities') || '').split(',').filter(id => Object.hasOwn(abilities, id)));
+let usedAbilities = new Set();
+let failedQuestions = [];
+let correctAnswers = 0;
+let timerId = null;
+let feedbackTimerId = null;
+let feedbackTickId = null;
+let phase = 'loadout';
+let activeFirewall = false;
+let activeOverclock = false;
+let recoveryQuestion = null;
+let recoveryResult = 'none';
+
+const $ = id => document.getElementById(id);
+const playerName = params.get('player')?.trim() || '';
+
+function calculateMultiplier() {
+    return streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
+}
+
+function updateStats() {
+    $('scoreDisplay').textContent = score;
+    $('streakDisplay').textContent = streak;
+    $('multiplierDisplay').textContent = multiplier.toFixed(1) + 'x';
+}
+
+function renderAbilities() {
+    const container = $('abilityActions');
+    container.replaceChildren();
+    for (const id of selectedAbilities) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ability-btn' + ((id === 'firewall' && activeFirewall) || (id === 'overclock' && activeOverclock) ? ' active' : '');
+        const label = document.createElement('span');
+        label.textContent = `${abilities[id].name}${usedAbilities.has(id) ? ' / USED' : ''}`;
+        button.append(window.createAbilityIcon(id), label);
+        button.disabled = phase !== 'question' || usedAbilities.has(id);
+        button.addEventListener('click', () => useAbility(id));
+        container.append(button);
+    }
+}
+
+function useAbility(id) {
+    if (phase !== 'question' || !selectedAbilities.has(id) || usedAbilities.has(id)) return;
+    usedAbilities.add(id);
+    if (id === 'firewall') activeFirewall = true;
+    if (id === 'overclock') activeOverclock = true;
+    if (id === 'lieDetector') {
+        $('analysisHint').textContent = `CLUE: ${questions[currentQuestionIndex].hint}`;
+        $('analysisHint').hidden = false;
+    }
+    if (id === 'override') {
+        stopTimer();
+        score += BASE_POINTS;
+        streak = 0;
+        multiplier = 1;
+        completeQuestion('QUESTION SKIPPED', '+100 points. Your streak has ended.');
+    } else renderAbilities();
+}
+
+function stopTimer() {
+    if (timerId !== null) clearInterval(timerId);
+    timerId = null;
+}
+
+function stopFeedbackTimer() {
+    if (feedbackTimerId !== null) clearTimeout(feedbackTimerId);
+    if (feedbackTickId !== null) clearInterval(feedbackTickId);
+    feedbackTimerId = null;
+    feedbackTickId = null;
+}
+
+function startTimer() {
+    stopTimer();
+    const deadline = Date.now() + QUESTION_SECONDS * 1000;
+    $('timerDisplay').classList.remove('urgent');
+    $('timerDisplay').textContent = `${QUESTION_SECONDS}s`;
+    timerId = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        $('timerDisplay').textContent = `${remaining}s`;
+        $('timerDisplay').classList.toggle('urgent', remaining <= 3);
+        if (remaining === 0) submitAnswer(null);
+    }, 100);
+}
+
+function loadQuestion() {
+    phase = 'question';
+    activeFirewall = false;
+    activeOverclock = false;
+    const question = questions[currentQuestionIndex];
+    const number = String(question.id).padStart(2, '0');
+    $('questionCount').textContent = `${number} / ${questions.length}`;
+    $('suspectNumber').textContent = number;
+    $('questionProgress').style.width = `${(currentQuestionIndex + 1) / questions.length * 100}%`;
+    $('suspectText').textContent = question.text;
+    $('analysisHint').hidden = true;
+    $('analysisHint').textContent = '';
+    $('feedbackModal').hidden = true;
+    $('answerHuman').disabled = false;
+    $('answerAi').disabled = false;
+    updateStats();
+    renderAbilities();
+    startTimer();
+}
+
+function completeQuestion(title, message) {
+    phase = 'feedback';
+    stopTimer();
+    $('answerHuman').disabled = true;
+    $('answerAi').disabled = true;
+    $('feedbackTitle').textContent = title;
+    $('feedbackText').textContent = message;
+    $('feedbackModal').hidden = false;
+    $('feedbackCountdownLabel').textContent = currentQuestionIndex === questions.length - 1
+        ? (failedQuestions.length ? 'Recovery starts in' : 'Results in')
+        : 'Next question in';
+    $('feedbackNextButton').textContent = currentQuestionIndex === questions.length - 1
+        ? (failedQuestions.length ? 'START RECOVERY' : 'SEE RESULTS')
+        : 'NEXT QUESTION';
+    $('feedbackSeconds').textContent = FEEDBACK_SECONDS;
+    const deadline = Date.now() + FEEDBACK_SECONDS * 1000;
+    feedbackTickId = setInterval(() => {
+        $('feedbackSeconds').textContent = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    }, 100);
+    feedbackTimerId = setTimeout(nextQuestion, FEEDBACK_SECONDS * 1000);
+    updateStats();
+    renderAbilities();
+}
+
+function submitAnswer(choice) {
+    if (phase !== 'question') return;
+    const question = questions[currentQuestionIndex];
+    if (choice === question.answer) {
+        correctAnswers++;
+        streak++;
+        multiplier = calculateMultiplier();
+        const points = BASE_POINTS * multiplier * (activeOverclock ? 2 : 1);
+        score += points;
+        completeQuestion('CORRECT', `+${points} points. ${question.explanation}`);
+    } else {
+        failedQuestions.push({ id: question.id, text: question.text, answer: question.answer, explanation: question.explanation });
+        if (activeOverclock || !activeFirewall || choice === null) {
+            streak = 0;
+            multiplier = 1;
+        }
+        const prefix = choice === null ? 'Time is up.' : 'Wrong answer.';
+        const protection = activeFirewall && !activeOverclock && choice !== null ? ' Firewall kept your streak.' : '';
+        completeQuestion('INCORRECT', `${prefix} The answer was ${question.answer.toUpperCase()}. ${question.explanation}${protection}`);
+    }
+}
+
+function nextQuestion() {
+    if (phase !== 'feedback') return;
+    stopFeedbackTimer();
+    $('feedbackModal').hidden = true;
+    if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        loadQuestion();
+    } else if (failedQuestions.length > 0) {
+        startRecovery();
+    } else {
+        showFinal();
+    }
+}
+
+function startRecovery() {
+    phase = 'recovery';
+    recoveryQuestion = failedQuestions[Math.floor(Math.random() * failedQuestions.length)];
+    $('recoveryQuestionLabel').textContent = `QUESTION ${String(recoveryQuestion.id).padStart(2, '0')}`;
+    $('recoveryText').textContent = recoveryQuestion.text;
+    $('recoveryModal').hidden = false;
+}
+
+function submitRecovery(choice) {
+    if (phase !== 'recovery') return;
+    phase = 'complete';
+    $('recoveryHuman').disabled = true;
+    $('recoveryAi').disabled = true;
+    if (choice === recoveryQuestion.answer) {
+        score += BASE_POINTS / 2;
+        recoveryResult = 'Recovered 50 points';
+    } else recoveryResult = 'Recovery missed';
+    $('recoveryModal').hidden = true;
+    showFinal();
+}
+
+function showFinal() {
+    phase = 'final';
+    const perfect = failedQuestions.length === 0;
+    $('finalTitle').textContent = perfect ? 'Perfect Score Victory' : 'Mission Complete';
+    $('finalSummary').textContent = perfect
+        ? 'You finished all 12 questions without a wrong answer.'
+        : 'You have finished your extra question.';
+    $('finalScore').textContent = score;
+    $('finalBreakdown').textContent = `${correctAnswers} correct / ${failedQuestions.length} incorrect / ${recoveryResult}`;
+    $('continueButton').href = `/pages/chat.html?player=${encodeURIComponent(playerName)}&g1score=${score}&g1total=${questions.length}`;
+    $('finalModal').hidden = false;
+}
+
+function beginGame() {
+    if (phase !== 'loadout' || selectedAbilities.size !== 2 || !playerName) return;
+    $('gameShell').hidden = false;
+    loadQuestion();
+}
+
+if (!playerName || selectedAbilities.size !== 2) {
+    window.location.href = '/pages/menu.html';
+} else {
+    $('playerLabel').textContent = playerName;
+    beginGame();
+}
+$('answerHuman').addEventListener('click', () => submitAnswer('human'));
+$('answerAi').addEventListener('click', () => submitAnswer('ai'));
+$('feedbackNextButton').addEventListener('click', nextQuestion);
+$('recoveryHuman').addEventListener('click', () => submitRecovery('human'));
+$('recoveryAi').addEventListener('click', () => submitRecovery('ai'));

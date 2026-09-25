@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round 1 | Guess Who Am I?</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <script src="/js/abilities.js" defer></script>
+    <script src="/js/game1.js" defer></script>
+</head>
+<body class="game-page">
+    <header class="game-header">
+        <a class="game-logo" href="/pages/menu.html"><span>G</span> Guess Who Am I?</a>
+        <span class="round-tag">ROUND 1 / TEXT CLUES</span>
+    </header>
+
+    <main class="game-shell" id="gameShell" hidden>
+        <div class="game-topline">
+            <div><span class="eyebrow">PLAYER</span><strong id="playerLabel"></strong></div>
+            <div><span class="eyebrow">QUESTION</span><strong id="questionCount">01 / 12</strong></div>
+            <div><span class="eyebrow">TIME LEFT</span><strong id="timerDisplay">10s</strong></div>
+        </div>
+        <div class="game-progress"><div id="questionProgress"></div></div>
+
+        <section class="game-stats" aria-label="Current game statistics">
+            <div><span class="eyebrow">SCORE</span><strong id="scoreDisplay">0</strong> pts</div>
+            <div><span class="eyebrow">STREAK</span><strong id="streakDisplay">0</strong></div>
+            <div><span class="eyebrow">MULTIPLIER</span><strong id="multiplierDisplay">1.0x</strong></div>
+        </section>
+
+        <section class="suspect-card" aria-labelledby="suspectHeading">
+            <p class="eyebrow" id="suspectHeading">INCOMING MESSAGE / SUSPECT <span id="suspectNumber">01</span></p>
+            <blockquote id="suspectText"></blockquote>
+            <p class="analysis-hint" id="analysisHint" hidden></p>
+        </section>
+
+        <section class="ability-panel" aria-labelledby="abilityHeading">
+            <div class="section-heading"><h2 id="abilityHeading">YOUR POWERS</h2><span>Use each one time</span></div>
+            <div class="ability-actions" id="abilityActions"></div>
+        </section>
+
+        <section class="answer-panel" aria-labelledby="answerHeading">
+            <h2 id="answerHeading">WHO WROTE THIS?</h2>
+            <div class="answer-grid">
+                <button type="button" class="answer-btn human" id="answerHuman">HUMAN</button>
+                <button type="button" class="answer-btn ai" id="answerAi">AI</button>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="modal-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
+        <div class="modal-card feedback-card" aria-live="polite">
+            <p class="eyebrow">QUESTION RESULT</p>
+            <h1 id="feedbackTitle"></h1>
+            <p id="feedbackText"></p>
+            <div class="feedback-countdown"><span id="feedbackCountdownLabel">Next question in</span><strong id="feedbackSeconds">5</strong><span>seconds</span></div>
+            <button type="button" class="primary-btn feedback-next" id="feedbackNextButton">NEXT QUESTION</button>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="recoveryModal" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle" hidden>
+        <div class="modal-card">
+            <p class="eyebrow">REDEMPTION PROTOCOL</p>
+            <h1 id="recoveryTitle">System Recovery</h1>
+            <p>Try one question you missed. Get it right to earn 50 points.</p>
+            <p class="eyebrow" id="recoveryQuestionLabel"></p>
+            <blockquote class="recovery-text" id="recoveryText"></blockquote>
+            <div class="answer-grid">
+                <button type="button" class="answer-btn human" id="recoveryHuman">HUMAN</button>
+                <button type="button" class="answer-btn ai" id="recoveryAi">AI</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="finalModal" role="dialog" aria-modal="true" aria-labelledby="finalTitle" hidden>
+        <div class="modal-card">
+            <p class="eyebrow">ROUND 1 COMPLETE</p>
+            <h1 id="finalTitle"></h1>
+            <p id="finalSummary"></p>
+            <div class="final-score"><strong id="finalScore">0</strong><span>POINTS</span></div>
+            <div class="final-breakdown" id="finalBreakdown"></div>
+            <a class="primary-btn" id="continueButton" href="/pages/chat.html">CONTINUE TO ROUND 2</a>
+            <a class="secondary-link" href="/pages/menu.html">PLAY AGAIN</a>
+        </div>
+    </div>
+</body>
+</html>
