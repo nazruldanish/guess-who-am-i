@@ -30,14 +30,11 @@ socket.on('gameStarted', ({ isAI }) => {
 });
 
 function startTimer() {
-    const fill = $('progressFill');
     const badge = $('timerBadge');
     timerInterval = setInterval(() => {
         timeLeft--;
         const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
         $('timerDisplay').textContent = `${m}:${s.toString().padStart(2, '0')}`;
-        $('progressLabel').textContent = `${timeLeft}s`;
-        fill.style.width = (timeLeft / GAME_SECONDS * 100) + '%';
         if (timeLeft <= 10) badge.classList.add('urgent');
         if (timeLeft > 0 && timeLeft <= 5) playSound('tick');
         if (timeLeft <= 0) {

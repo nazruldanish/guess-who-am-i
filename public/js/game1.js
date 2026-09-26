@@ -146,7 +146,6 @@ function loadQuestion() {
     const question = questions[currentQuestionIndex];
     $('questionCount').textContent = `${question.id} / ${questions.length}`;
     $('suspectNumber').textContent = String(question.id).padStart(2, '0');
-    $('questionProgress').style.width = `${(currentQuestionIndex + 1) / questions.length * 100}%`;
     $('suspectText').textContent = question.text;
     $('analysisHint').hidden = true;
     $('analysisHint').textContent = '';
