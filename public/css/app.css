@@ -140,9 +140,10 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--lime); outline-
 .power-firewall { --tone: #3b1f76; --tone-bg: #ece6fb; }
 .power-lieDetector { --tone: #7b4fd6; --tone-bg: #efe8ff; }
 .power-overclock { --tone: #ef3b3b; --tone-bg: #fde6e6; }
-.power-override { --tone: #5b6b1f; --tone-bg: #eef9d4; }
+.power-override { --tone: #8db832; --tone-bg: #eef9d4; }
 
 .ability-icon { display: inline-grid; place-items: center; flex: 0 0 auto; }
+.ability-icon svg { display: block; width: 72%; height: 72%; overflow: visible; }
 
 /* ---------- Game header (Round 1 + 2) ---------- */
 .game-page, .chat-page { display: flex; flex-direction: column; }
