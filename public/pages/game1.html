@@ -8,6 +8,7 @@
     <script src="/js/sfx.js" defer></script>
     <script src="/js/abilities.js" defer></script>
     <script src="/js/game1.js" defer></script>
+    <script src="/js/fullscreen.js" defer></script>
 </head>
 <body class="game-page">
     <div class="bg-shapes" aria-hidden="true">
@@ -15,21 +16,36 @@
         <span class="diamond"></span><span class="circle"></span><span class="square"></span>
     </div>
 
-    <header class="game-header">
-        <a class="game-logo" href="/pages/menu.html"><span class="logo-mark">?</span><span class="logo-text">Guess Who Am I?</span></a>
-        <span class="round-tag">Round 1 · Text Clues</span>
-        <div class="player-chip"><span class="chip-avatar" id="playerAvatar">🙂</span><strong id="playerLabel"></strong></div>
+    <header class="top-bar">
+        <div class="top-left">
+            <a class="brand-mark" href="/pages/menu.html" aria-label="Guess Who Am I? (back to start)"><img src="/assets/logo.png" alt=""></a>
+            <div class="hud-chips top-left" id="streakRow">
+                <span class="hud-chip streak-chip" title="Streak: answers right in a row">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5.5 5.5 5.5 11.5a5.5 5.5 0 0 1-11 0c0-2.8 1.3-4.4 2.7-5.5.1 2 1 3 2.2 3.4C10.6 8.8 10.9 5 12 2Z" fill="#ff7a1a" stroke="#1c0b3d" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 11.5c.6 2 2.6 2.6 2.6 5a2.6 2.6 0 0 1-5.2 0c0-1.4.8-2.2 1.5-2.7.3.8.8 1.1 1.2 1.1-.4-1.2-.4-2.3-.1-3.4Z" fill="#ffd23f"/></svg>
+                    <strong id="streakDisplay">0</strong>
+                </span>
+                <span class="hud-chip multiplier-chip" id="multiplierChip" title="Bonus multiplier: 3 in a row = 1.5x, 5 in a row = 2x">
+                    <span class="chip-label">Bonus</span><strong id="multiplierDisplay">1.0x</strong>
+                </span>
+            </div>
+        </div>
+        <div class="top-right">
+            <span class="hud-chip score-chip" title="Score">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9Z" fill="#d4fb79" stroke="#1c0b3d" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                <span class="chip-label">Score</span><strong id="scoreDisplay">0</strong>
+            </span>
+            <button type="button" class="icon-btn" id="fullscreenButton" aria-label="Full screen" title="Full screen">
+                <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+                <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+            </button>
+        </div>
+        <div class="game-progress" aria-hidden="true"><div id="questionProgress"></div></div>
     </header>
 
     <main class="game-shell" id="gameShell" hidden>
-        <div class="hud">
-            <div class="hud-pill"><span class="eyebrow">Question</span><strong id="questionCount">1 / 12</strong></div>
-            <div class="timer-circle" aria-label="Time left"><strong id="timerDisplay">10</strong></div>
-            <div class="hud-pill"><span class="eyebrow">Score</span><strong id="scoreDisplay">0</strong></div>
-        </div>
-        <div class="game-progress" aria-hidden="true"><div id="questionProgress"></div></div>
-
         <section class="suspect-card" aria-labelledby="suspectHeading">
+            <span class="question-badge" id="questionCount">1 / 12</span>
+            <div class="timer-circle" aria-label="Time left"><strong id="timerDisplay">10</strong></div>
             <div class="suspect-head">
                 <span class="suspect-avatar" aria-hidden="true">?</span>
                 <div>
@@ -42,11 +58,6 @@
             <p class="analysis-hint" id="analysisHint" hidden></p>
         </section>
 
-        <div class="streak-row" id="streakRow">
-            <span class="streak-chip">🔥 Streak <strong id="streakDisplay">0</strong></span>
-            <span class="streak-chip">✖️ Bonus <strong id="multiplierDisplay">1.0x</strong></span>
-        </div>
-
         <section class="answer-panel" aria-labelledby="answerHeading">
             <h2 class="panel-title" id="answerHeading">Who wrote this?</h2>
             <div class="answer-grid">
@@ -54,12 +65,13 @@
                 <button type="button" class="btn-3d answer-btn ai" id="answerAi"><span class="answer-emoji" aria-hidden="true">🤖</span>AI</button>
             </div>
         </section>
-
-        <section class="ability-panel" aria-labelledby="abilityHeading">
-            <h2 class="panel-title" id="abilityHeading">Power-ups <small>one use each</small></h2>
-            <div class="ability-actions" id="abilityActions"></div>
-        </section>
     </main>
+
+    <footer class="bottom-bar">
+        <div class="player-chip"><span class="chip-avatar" id="playerAvatar">🙂</span><strong id="playerLabel"></strong></div>
+        <div class="ability-actions" id="abilityActions" role="group" aria-label="Power-ups"></div>
+        <span class="round-tag">Round 1 · Text Clues</span>
+    </footer>
 
     <div class="modal-backdrop feedback-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
         <div class="feedback-card" aria-live="polite">

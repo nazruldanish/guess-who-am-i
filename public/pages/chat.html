@@ -13,10 +13,18 @@
         <span class="diamond"></span><span class="circle"></span><span class="square"></span>
     </div>
 
-    <header class="game-header">
-        <a class="game-logo" href="/pages/menu.html"><span class="logo-mark">?</span><span class="logo-text">Guess Who Am I?</span></a>
-        <span class="round-tag">Round 2 · Live Chat</span>
-        <div class="timer-badge" id="timerBadge">⏱️ <span id="timerDisplay">2:00</span></div>
+    <header class="top-bar">
+        <div class="top-left">
+            <a class="brand-mark" href="/pages/menu.html" aria-label="Guess Who Am I? (back to start)"><img src="/assets/logo.png" alt=""></a>
+            <span class="round-tag">Round 2 · Live Chat</span>
+        </div>
+        <div class="top-right">
+            <div class="timer-badge" id="timerBadge">⏱️ <span id="timerDisplay">2:00</span></div>
+            <button type="button" class="icon-btn" id="fullscreenButton" aria-label="Full screen" title="Full screen">
+                <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+                <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+            </button>
+        </div>
     </header>
 
     <main class="chat-main">
@@ -95,5 +103,6 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/sfx.js"></script>
     <script src="/js/chat.js" defer></script>
+    <script src="/js/fullscreen.js" defer></script>
 </body>
 </html>

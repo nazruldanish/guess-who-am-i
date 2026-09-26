@@ -1,6 +1,4 @@
 /* Round 2 chat (loaded after app.css) */
-.timer-badge { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 99px; background: #fff; color: var(--ink); font-family: 'Anton', sans-serif; font-size: 20px; }
-.timer-badge.urgent { background: var(--red); color: #fff; animation: pulse .7s ease-in-out infinite; }
 
 .chat-main { position: relative; z-index: 1; flex: 1; width: min(720px, calc(100% - 32px)); margin: 16px auto 24px; display: flex; flex-direction: column; gap: 14px; }
 

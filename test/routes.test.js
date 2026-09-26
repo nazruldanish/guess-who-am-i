@@ -17,6 +17,7 @@ test('organized pages and assets load while old page URLs redirect', async () =>
             '/css/admin.css',
             '/js/abilities.js',
             '/js/sfx.js',
+            '/js/fullscreen.js',
             '/js/menu.js',
             '/js/game1.js',
             '/js/chat.js',

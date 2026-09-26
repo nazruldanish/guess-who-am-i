@@ -58,6 +58,7 @@ function updateStats() {
     $('streakDisplay').textContent = streak;
     $('multiplierDisplay').textContent = multiplier.toFixed(1) + 'x';
     $('streakRow').classList.toggle('hot', streak >= 3);
+    $('multiplierChip').classList.toggle('boosted', multiplier > 1);
 }
 
 function renderAbilities() {
@@ -67,10 +68,21 @@ function renderAbilities() {
         const button = document.createElement('button');
         button.type = 'button';
         const active = (id === 'firewall' && activeFirewall) || (id === 'overclock' && activeOverclock);
-        button.className = `btn-3d ability-btn power-${id}` + (active ? ' active' : '') + (usedAbilities.has(id) ? ' used' : '');
-        const label = document.createElement('span');
-        label.textContent = `${abilities[id].name}${active ? ' ✓' : ''}`;
-        button.append(window.createAbilityIcon(id), label);
+        const used = usedAbilities.has(id);
+        button.className = `power-tile power-${id}` + (active ? ' active' : '') + (used ? ' used' : '');
+        const status = active ? ' (on)' : used ? ' (used)' : '';
+        button.setAttribute('aria-label', `${abilities[id].name}${status}: ${abilities[id].description}`);
+
+        // Name + description card shown on hover / keyboard focus
+        const tip = document.createElement('span');
+        tip.className = 'power-tip';
+        const tipName = document.createElement('strong');
+        tipName.textContent = abilities[id].name + status;
+        const tipText = document.createElement('span');
+        tipText.textContent = abilities[id].description;
+        tip.append(tipName, tipText);
+
+        button.append(window.createAbilityIcon(id), tip);
         button.disabled = phase !== 'question' || usedAbilities.has(id);
         button.addEventListener('click', () => useAbility(id));
         container.append(button);
