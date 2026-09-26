@@ -20,11 +20,13 @@ const questions = [
 ];
 
 const FEEDBACK_STYLES = {
-    correct: { title: 'Correct!', icon: '✅', sound: 'correct' },
-    wrong: { title: 'Oops!', icon: '❌', sound: 'wrong' },
-    timeout: { title: "Time's up!", icon: '⏰', sound: 'wrong' },
-    skip: { title: 'Skipped!', icon: '⏭️', sound: 'click' }
+    correct: { title: '✅ Correct!', sound: 'correct' },
+    wrong: { title: '❌ Oops!', sound: 'wrong' },
+    timeout: { title: "⏰ Time's up!", sound: 'wrong' },
+    skip: { title: '⏭️ Skipped!', sound: 'click' }
 };
+
+const ANSWER_BUTTONS = [['answerHuman', 'human'], ['answerAi', 'ai']];
 
 let currentQuestionIndex = 0;
 let score = 0;
@@ -168,28 +170,40 @@ function loadQuestion() {
     $('suspectText').textContent = question.text;
     $('analysisHint').hidden = true;
     $('analysisHint').textContent = '';
-    $('feedbackModal').hidden = true;
-    $('answerHuman').disabled = false;
-    $('answerAi').disabled = false;
+    $('feedbackBar').hidden = true;
+    for (const [id] of ANSWER_BUTTONS) {
+        $(id).disabled = false;
+        $(id).classList.remove('result-correct', 'result-wrong');
+        $(id + 'Points').hidden = true;
+    }
     updateStats();
     renderAbilities();
     startTimer();
 }
 
-function completeQuestion(kind, points, message) {
+// Colour the answer boxes: the picked box turns green/red, the right answer is
+// shown in green, and the points won pop up briefly over the box
+function showAnswerResult(kind, choice, points) {
+    const answer = questions[currentQuestionIndex].answer;
+    for (const [id, value] of ANSWER_BUTTONS) {
+        const resultClass = value === answer ? 'result-correct' : value === choice ? 'result-wrong' : '';
+        const pointsBadge = $(id + 'Points');
+        $(id).disabled = true;
+        $(id).classList.remove('result-correct', 'result-wrong');
+        if (resultClass) $(id).classList.add(resultClass);
+        pointsBadge.textContent = points;
+        pointsBadge.hidden = !(value === choice || (kind === 'skip' && value === answer));
+    }
+}
+
+function completeQuestion(kind, points, message, choice = null) {
     phase = 'feedback';
     stopTimer();
     const style = FEEDBACK_STYLES[kind];
-    const modal = $('feedbackModal');
-    $('answerHuman').disabled = true;
-    $('answerAi').disabled = true;
-    modal.classList.remove('correct', 'wrong', 'timeout', 'skip');
-    modal.classList.add(kind);
-    $('feedbackIcon').textContent = style.icon;
+    showAnswerResult(kind, choice, points);
     $('feedbackTitle').textContent = style.title;
-    $('feedbackPoints').textContent = points;
     $('feedbackText').textContent = message;
-    modal.hidden = false;
+    $('feedbackBar').hidden = false;
     playSound(style.sound);
     $('feedbackCountdownLabel').textContent = currentQuestionIndex === questions.length - 1
         ? (failedQuestions.length ? 'Bonus chance in' : 'Results in')
@@ -217,7 +231,7 @@ function submitAnswer(choice) {
         const points = BASE_POINTS * multiplier * (activeOverclock ? 2 : 1);
         score += points;
         const streakNote = streak >= 3 ? ` 🔥 ${streak} in a row!` : '';
-        completeQuestion('correct', `+${points}`, question.explanation + streakNote);
+        completeQuestion('correct', `+${points}`, question.explanation + streakNote, choice);
     } else {
         failedQuestions.push({ id: question.id, text: question.text, answer: question.answer, explanation: question.explanation });
         if (activeOverclock || !activeFirewall || choice === null) {
@@ -225,15 +239,15 @@ function submitAnswer(choice) {
             multiplier = 1;
         }
         const protection = activeFirewall && !activeOverclock && choice !== null ? ' 🛡️ Firewall kept your streak!' : '';
-        const answerLabel = question.answer === 'ai' ? 'AI 🤖' : 'HUMAN 🧑';
-        completeQuestion(choice === null ? 'timeout' : 'wrong', '+0', `It was ${answerLabel}. ${question.explanation}${protection}`);
+        const answerLabel = question.answer === 'ai' ? 'AI 🤖' : 'Human 🧑';
+        completeQuestion(choice === null ? 'timeout' : 'wrong', '+0', `It was ${answerLabel}. ${question.explanation}${protection}`, choice);
     }
 }
 
 function nextQuestion() {
     if (phase !== 'feedback') return;
     stopFeedbackTimer();
-    $('feedbackModal').hidden = true;
+    $('feedbackBar').hidden = true;
     if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
         loadQuestion();
@@ -273,7 +287,7 @@ function showFinal() {
     phase = 'final';
     const perfect = failedQuestions.length === 0;
     const stars = correctAnswers >= 11 ? 3 : correctAnswers >= 7 ? 2 : correctAnswers >= 3 ? 1 : 0;
-    $('finalTitle').textContent = perfect ? 'Perfect Score Victory' : ['Nice try!', 'Good job!', 'Great job!', 'Amazing!'][stars];
+    $('finalTitle').textContent = perfect ? 'Perfect score victory' : ['Nice try!', 'Good job!', 'Great job!', 'Amazing!'][stars];
     $('finalStars').replaceChildren(...[0, 1, 2].map(i => {
         const star = document.createElement('span');
         star.textContent = '⭐';
@@ -291,6 +305,11 @@ function showFinal() {
     $('continueButton').href = `/pages/chat.html?${next.toString()}`;
     $('finalModal').hidden = false;
     playSound('win');
+    fetch('/api/leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: playerName, avatar: playerAvatar, score })
+    }).catch(() => {});
 }
 
 function beginGame() {

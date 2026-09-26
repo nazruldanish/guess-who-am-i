@@ -9,16 +9,16 @@
 .radar::before, .radar::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--lime-dark); animation: ripple 1.8s ease-out infinite; }
 .radar::after { animation-delay: .9s; }
 @keyframes ripple { from { transform: scale(1); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
-.pre-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 32px; text-transform: uppercase; }
+.pre-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 32px; }
 .pre-sub { font-weight: 800; opacity: .85; }
 
 /* Chat card */
 #gameArea { display: none; flex-direction: column; gap: 12px; }
-.chat-card { overflow: hidden; border-radius: 24px; background: #fff; border: 2px solid #e3e3e8; box-shadow: 0 8px 0 var(--card-shadow); }
+.chat-card { overflow: hidden; border-radius: 24px; background: #fff; border: 2px solid #e3e3e8; }
 .chat-card-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: var(--purple-dark); color: #fff; }
 .chat-avatar { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: var(--lime); color: var(--red); font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 28px; flex: 0 0 auto; }
 .chat-header-info { flex: 1; }
-.chat-header-name { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; text-transform: uppercase; }
+.chat-header-name { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; }
 .chat-header-sub { font-size: 12px; font-weight: 800; color: var(--lime); }
 .status-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(212,251,121,.3); animation: blink 1.5s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .4; } }
@@ -33,7 +33,7 @@
 .bubble.you { align-self: flex-end; border-bottom-right-radius: 6px; background: var(--lime); color: var(--purple-deep); }
 .bubble.them { align-self: flex-start; border-bottom-left-radius: 6px; background: #fff; color: var(--ink); }
 .bubble.system { align-self: center; padding: 6px 14px; border-radius: 99px; background: rgba(255,255,255,.15); color: #fff; font-size: 13px; }
-.bubble-label { margin-bottom: 2px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; opacity: .7; }
+.bubble-label { margin-bottom: 2px; font-size: 11px; font-weight: 900; opacity: .7; }
 
 .empty-state { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: auto; color: #fff; text-align: center; }
 .empty-state-icon { font-size: 44px; animation: wave 1.6s ease-in-out infinite; transform-origin: 70% 70%; }
@@ -52,7 +52,7 @@
 #msgInput:focus { border-color: var(--purple); }
 #msgInput::placeholder { color: #b3a8cf; }
 #msgInput:disabled { opacity: .5; cursor: not-allowed; }
-#sendBtn { --face: var(--lime); --edge: var(--lime-dark); width: 54px; height: 50px; flex: 0 0 auto; }
+#sendBtn { --face: var(--lime); width: 54px; height: 50px; flex: 0 0 auto; }
 #sendBtn svg { width: 22px; height: 22px; fill: var(--purple); }
 
 .chat-tip { text-align: center; color: var(--muted); font-weight: 800; }

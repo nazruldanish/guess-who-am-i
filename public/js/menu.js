@@ -38,7 +38,7 @@ function renderLoadout() {
     const ready = selectedAbilities.size === 2;
     document.getElementById('selectionCount').textContent = `${selectedAbilities.size} of 2 selected`;
     document.getElementById('beginButton').disabled = !ready;
-    document.getElementById('beginButton').textContent = ready ? 'Start Round 1 🚀' : 'Pick 2 power-ups';
+    document.getElementById('beginButton').textContent = ready ? 'Start round 1 🚀' : 'Pick 2 power-ups';
 }
 
 function startGame() {
@@ -69,8 +69,60 @@ function beginRound() {
     window.location.href = '/pages/game1.html?' + params.toString();
 }
 
+function leaderboardEntry(tag, className, entry) {
+    const el = document.createElement(tag);
+    el.className = className;
+    const avatar = document.createElement('span');
+    avatar.className = 'lb-avatar';
+    avatar.textContent = entry.avatar;
+    const name = document.createElement('span');
+    name.className = 'lb-name';
+    name.textContent = entry.name;
+    const score = document.createElement('span');
+    score.className = 'lb-score';
+    score.textContent = entry.score.toLocaleString();
+    el.append(avatar, name, score);
+    return el;
+}
+
+function renderLeaderboard(entries) {
+    // Podium order left-to-right: 2nd, 1st, 3rd.
+    const podium = document.getElementById('podium');
+    podium.replaceChildren(...[1, 0, 2].filter(i => entries[i]).map(i => {
+        const place = leaderboardEntry('div', `podium-place place-${i + 1}`, entries[i]);
+        const step = document.createElement('span');
+        step.className = 'podium-step';
+        step.textContent = i + 1;
+        place.append(step);
+        return place;
+    }));
+    document.getElementById('rankList').replaceChildren(
+        ...entries.slice(3).map(entry => leaderboardEntry('li', 'rank-row', entry))
+    );
+    document.getElementById('leaderboardEmpty').hidden = entries.length > 0;
+}
+
+async function openLeaderboard() {
+    playSound('click');
+    document.getElementById('leaderboardModal').hidden = false;
+    const empty = document.getElementById('leaderboardEmpty');
+    try {
+        const response = await fetch('/api/leaderboard');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        renderLeaderboard(await response.json());
+        empty.textContent = 'No scores yet. Be the first!';
+    } catch {
+        renderLeaderboard([]);
+        empty.textContent = 'Could not load the leaderboard. Try again later.';
+    }
+}
+
 renderAvatar();
 renderLoadout();
+document.getElementById('leaderboardButton').addEventListener('click', openLeaderboard);
+document.getElementById('leaderboardClose').addEventListener('click', () => {
+    document.getElementById('leaderboardModal').hidden = true;
+});
 document.getElementById('avatarButton').addEventListener('click', () => {
     avatarIndex = (avatarIndex + 1) % AVATARS.length;
     playSound('click');

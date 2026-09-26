@@ -12,7 +12,7 @@ window.ABILITY_DEFINITIONS = {
             <ellipse cx="15.5" cy="14.5" rx="3" ry="1.5" fill="#fff" opacity=".45" transform="rotate(-20 15.5 14.5)"/>`
     },
     lieDetector: {
-        name: 'Lie Detector',
+        name: 'Lie detector',
         description: 'Get a clue about how the message was written.',
         // Violet magnifying glass with a question mark in the lens
         icon: `<path d="m30 30 10 10" stroke="#1c0b3d" stroke-width="9" stroke-linecap="round"/>

@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const fs = require('fs');
 const path = require('path');
 const { Server } = require('socket.io');
 const OpenAI = require('openai');
@@ -25,6 +26,46 @@ for (const [oldPath, newPath] of Object.entries(oldPagePaths)) {
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '2kb' }));
+
+// Leaderboard: best score per nickname, saved to a JSON file so it survives restarts.
+const LEADERBOARD_FILE = process.env.LEADERBOARD_FILE || path.join(__dirname, 'data', 'leaderboard.json');
+const LEADERBOARD_SIZE = 20;
+let leaderboard = [];
+try {
+    leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
+} catch {
+    leaderboard = [];
+}
+
+function saveLeaderboard() {
+    fs.mkdirSync(path.dirname(LEADERBOARD_FILE), { recursive: true });
+    fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2));
+}
+
+app.get('/api/leaderboard', (req, res) => {
+    res.json(leaderboard.slice(0, LEADERBOARD_SIZE));
+});
+
+app.post('/api/leaderboard', (req, res) => {
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 16) : '';
+    const avatar = typeof req.body?.avatar === 'string' ? req.body.avatar.slice(0, 8) : '🙂';
+    const score = Number(req.body?.score);
+    if (!name || !Number.isInteger(score) || score < 0 || score > 100000) {
+        return res.status(400).json({ error: 'Invalid score' });
+    }
+
+    const existing = leaderboard.find(entry => entry.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+        if (score >= existing.score) Object.assign(existing, { name, avatar, score, at: Date.now() });
+    } else {
+        leaderboard.push({ name, avatar, score, at: Date.now() });
+    }
+    leaderboard.sort((a, b) => b.score - a.score || a.at - b.at);
+    leaderboard = leaderboard.slice(0, 100);
+    saveLeaderboard();
+    res.json(leaderboard.slice(0, LEADERBOARD_SIZE));
+});
 
 // Load secrets from .env (kept out of Git by .gitignore).
 try {
@@ -53,6 +94,7 @@ io.on('connection', (socket) => {
         const systemPrompt = `You are playing a human in a chat game. Users will chat with you and must guess if you are human or AI. Your goal is to convince them you are human.
 
 Rules:
+- Match the user's language and tone. Speak Malay by default.
 - Reply short, like a normal casual chat. Usually 1-2 sentences.
 - Do not use perfect grammar or structure every time.
 - Do not use bullet points or lists.
@@ -60,7 +102,6 @@ Rules:
 - Occasionally ask a question back, but not every reply.
 - Sometimes say you are not sure, or that you do not know something.
 - Never admit you are an AI unless directly and repeatedly pressed.
-- Match the user's language and tone. If they speak Malay casually, reply in Malay casually.
 - Avoid sounding like a customer service bot.
 - No emoji spam. Use emoji rarely, if at all.
 - If the user talks about random topics, go along with it naturally.`;

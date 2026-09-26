@@ -7,6 +7,7 @@ const path = require('node:path');
 function makeGame(abilityList = 'firewall,lieDetector') {
     const elements = new Map();
     const timeouts = [];
+    const posts = [];
     function element() {
         return {
             textContent: '', hidden: false, disabled: false, style: {}, children: [],
@@ -21,7 +22,7 @@ function makeGame(abilityList = 'firewall,lieDetector') {
         getElementById(id) {
             if (!elements.has(id)) {
                 const node = element();
-                node.hidden = ['gameShell', 'recoveryModal', 'finalModal', 'feedbackModal', 'analysisHint'].includes(id);
+                node.hidden = ['gameShell', 'recoveryModal', 'finalModal', 'feedbackBar', 'analysisHint'].includes(id);
                 elements.set(id, node);
             }
             return elements.get(id);
@@ -37,14 +38,16 @@ function makeGame(abilityList = 'firewall,lieDetector') {
         setTimeout(callback, delay) { timeouts.push({ callback, delay }); return timeouts.length; },
         clearTimeout() {},
         Date,
-        Math
+        Math,
+        fetch: (url, options) => { posts.push({ url, body: JSON.parse(options.body) }); return Promise.resolve(); }
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/abilities.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/game1.js'), 'utf8'), context);
     return {
         run: expression => vm.runInContext(expression, context),
         get: id => document.getElementById(id),
-        timeouts
+        timeouts,
+        posts
     };
 }
 
@@ -95,8 +98,9 @@ test('12 correct answers go directly to perfect victory with streak points', () 
     }
     assert.equal(game.run('score'), 2100);
     assert.equal(game.run('failedQuestions.length'), 0);
-    assert.equal(game.get('finalTitle').textContent, 'Perfect Score Victory');
+    assert.equal(game.get('finalTitle').textContent, 'Perfect score victory');
     assert.equal(game.get('recoveryModal').hidden, true);
+    assert.deepEqual(game.posts, [{ url: '/api/leaderboard', body: { name: 'Tester', avatar: '🙂', score: 2100 } }]);
 });
 
 test('many misses permit exactly one recovery worth 50 points', () => {
@@ -156,15 +160,18 @@ test('overclock miss resets a protected streak and a timeout is recorded as fail
     assert.equal(game.run('phase'), 'feedback');
 });
 
-test('answer feedback opens a popup and advances automatically after five seconds', () => {
+test('answer feedback shows in the answer boxes and advances automatically after five seconds', () => {
     const game = makeGame();
     game.run('submitAnswer(questions[0].answer)');
-    assert.equal(game.get('feedbackModal').hidden, false);
+    assert.equal(game.get('feedbackBar').hidden, false);
+    const box = game.run("questions[0].answer === 'human' ? 'answerHuman' : 'answerAi'");
+    assert.equal(game.get(box + 'Points').hidden, false);
+    assert.equal(game.get(box + 'Points').textContent, '+100');
     assert.equal(game.get('feedbackSeconds').textContent, 5);
     assert.equal(game.timeouts[0].delay, 5000);
     game.timeouts[0].callback();
     assert.equal(game.run('currentQuestionIndex'), 1);
-    assert.equal(game.get('feedbackModal').hidden, true);
+    assert.equal(game.get('feedbackBar').hidden, true);
 });
 
 test('Next button skips feedback countdown without advancing twice', () => {
@@ -172,7 +179,7 @@ test('Next button skips feedback countdown without advancing twice', () => {
     game.run('submitAnswer(questions[0].answer)');
     game.get('feedbackNextButton').click();
     assert.equal(game.run('currentQuestionIndex'), 1);
-    assert.equal(game.get('feedbackModal').hidden, true);
+    assert.equal(game.get('feedbackBar').hidden, true);
     game.timeouts[0].callback();
     assert.equal(game.run('currentQuestionIndex'), 1);
 });

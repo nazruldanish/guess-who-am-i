@@ -16,9 +16,7 @@
 
     <main class="menu-wrap">
         <header class="brand">
-            <h1 class="brand-logo"><img src="/assets/logo.png" alt="Guess Who Am I?"></h1>
-            <p class="brand-tag">Can you tell the difference between a real person and an AI? Trust your gut and spot the fake!</p>
-        </header>
+            <h1 class="brand-logo"><img src="/assets/logo.png" alt="Guess Who Am I?"></h1>        </header>
 
         <section class="join-card" aria-label="Join the game">
             <button type="button" class="avatar-btn" id="avatarButton" aria-label="Change your avatar">🦊</button>
@@ -31,8 +29,13 @@
             </div>
             <div class="error-msg" id="errorMsg">Oops! Type a nickname first 😊</div>
 
-            <button type="button" class="btn-3d primary-btn start-btn" id="startButton">Let's Play!</button>
+            <button type="button" class="btn-3d primary-btn start-btn" id="startButton">Let's play!</button>
         </section>
+
+        <button type="button" class="leaderboard-btn" id="leaderboardButton">
+            <span>🏆 Leaderboard</span>
+            <span aria-hidden="true">›</span>
+        </button>
 
         <div class="setting-row">
             <span>🔊 Sound effects</span>
@@ -43,15 +46,26 @@
         </div>
     </main>
 
+    <div class="modal-backdrop" id="leaderboardModal" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle" hidden>
+        <div class="modal-card leaderboard-card">
+            <button type="button" class="close-btn" id="leaderboardClose" aria-label="Close">✕</button>
+            <span class="eyebrow pill-eyebrow">Top detectives</span>
+            <h1 id="leaderboardTitle">Leaderboard</h1>
+            <div class="podium" id="podium"></div>
+            <ol class="rank-list" id="rankList" start="4"></ol>
+            <p class="leaderboard-empty" id="leaderboardEmpty" hidden>No scores yet. Be the first!</p>
+        </div>
+    </div>
+
     <div class="modal-backdrop" id="loadoutModal" role="dialog" aria-modal="true" aria-labelledby="loadoutTitle" hidden>
         <div class="modal-card wide">
             <button type="button" class="close-btn" id="loadoutClose" aria-label="Back">✕</button>
             <span class="eyebrow pill-eyebrow">Get ready!</span>
             <h1 id="loadoutTitle">Choose 2 power-ups</h1>
-            <p>Each power-up works one time in Round 1. Choose wisely!</p>
+            <p>Each power-up works one time in round 1. Choose wisely!</p>
             <div class="loadout-grid" id="loadoutGrid"></div>
             <p class="selection-count" id="selectionCount">0 of 2 selected</p>
-            <button type="button" class="btn-3d primary-btn" id="beginButton" disabled>Start Round 1</button>
+            <button type="button" class="btn-3d primary-btn" id="beginButton" disabled>Start round 1</button>
         </div>
     </div>
 

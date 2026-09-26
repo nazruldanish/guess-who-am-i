@@ -20,7 +20,7 @@ socket.on('gameStarted', ({ isAI }) => {
     wasAI = isAI;
     $('preGame').style.display = 'none';
     $('gameArea').style.display = 'flex';
-    $('opponentName').textContent = 'Mystery Stranger';
+    $('opponentName').textContent = 'Mystery stranger';
     $('msgInput').disabled = false;
     $('sendBtn').disabled = false;
     $('msgInput').focus();
@@ -118,6 +118,11 @@ function makeGuess(type) {
     $('guessOverlay').hidden = true;
     $('resultOverlay').hidden = false;
     playSound(correct ? 'win' : 'wrong');
+    fetch('/api/leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: playerName, avatar: playerAvatar, score: previousScore + earned })
+    }).catch(() => {});
 }
 
 $('guessHuman').addEventListener('click', () => makeGuess('human'));

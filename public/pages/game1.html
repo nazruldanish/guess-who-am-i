@@ -48,7 +48,7 @@
             <div class="suspect-head">
                 <span class="suspect-avatar" aria-hidden="true">?</span>
                 <div>
-                    <strong id="suspectHeading">Mystery Sender #<span id="suspectNumber">01</span></strong>
+                    <strong id="suspectHeading">Mystery sender #<span id="suspectNumber">01</span></strong>
                     <small>sent you a message…</small>
                 </div>
             </div>
@@ -60,8 +60,21 @@
         <section class="answer-panel" aria-labelledby="answerHeading">
             <h2 class="panel-title" id="answerHeading">Who wrote this?</h2>
             <div class="answer-grid">
-                <button type="button" class="btn-3d answer-btn human" id="answerHuman">Human</button>
-                <button type="button" class="btn-3d answer-btn ai" id="answerAi">AI</button>
+                <button type="button" class="btn-3d answer-btn human" id="answerHuman">
+                    <span class="answer-label">Human</span>
+                    <strong class="answer-points" id="answerHumanPoints" hidden></strong>
+                </button>
+                <button type="button" class="btn-3d answer-btn ai" id="answerAi">
+                    <span class="answer-label">AI</span>
+                    <strong class="answer-points" id="answerAiPoints" hidden></strong>
+                </button>
+            </div>
+            <div class="feedback-bar" id="feedbackBar" aria-live="polite" hidden>
+                <p><strong id="feedbackTitle"></strong> <span id="feedbackText"></span></p>
+                <div class="feedback-actions">
+                    <span class="feedback-countdown"><span id="feedbackCountdownLabel">Next question in</span> <strong id="feedbackSeconds">5</strong>s</span>
+                    <button type="button" class="btn-3d feedback-next" id="feedbackNextButton">Next question ➜</button>
+                </div>
             </div>
         </section>
     </main>
@@ -69,7 +82,7 @@
     <footer class="bottom-bar">
         <div class="player-chip"><span class="chip-avatar" id="playerAvatar">🙂</span><strong id="playerLabel"></strong></div>
         <div class="ability-actions" id="abilityActions" role="group" aria-label="Power-ups"></div>
-        <span class="round-tag">Round 1 · Text Clues</span>
+        <span class="round-tag">Round 1 · Text clues</span>
     </footer>
 
     <div class="power-pop" id="powerPop" role="status" aria-live="polite">
@@ -80,21 +93,10 @@
         <div class="power-pop-text"><strong id="powerPopName"></strong><span id="powerPopNote"></span></div>
     </div>
 
-    <div class="modal-backdrop feedback-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
-        <div class="feedback-card" aria-live="polite">
-            <div class="feedback-icon" id="feedbackIcon" aria-hidden="true">✅</div>
-            <h1 id="feedbackTitle"></h1>
-            <p class="feedback-points" id="feedbackPoints"></p>
-            <p id="feedbackText"></p>
-            <div class="feedback-countdown"><span id="feedbackCountdownLabel">Next question in</span><strong id="feedbackSeconds">5</strong><span>seconds</span></div>
-            <button type="button" class="btn-3d primary-btn feedback-next" id="feedbackNextButton">Next question</button>
-        </div>
-    </div>
-
     <div class="modal-backdrop" id="recoveryModal" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle" hidden>
         <div class="modal-card recovery-card">
             <span class="eyebrow pill-eyebrow">Bonus chance</span>
-            <h1 id="recoveryTitle">🎁 Second Chance!</h1>
+            <h1 id="recoveryTitle">🎁 Second chance!</h1>
             <p>Try one question you missed. Get it right to win 50 extra points.</p>
             <p class="eyebrow" id="recoveryQuestionLabel"></p>
             <blockquote class="recovery-text" id="recoveryText"></blockquote>
@@ -113,13 +115,13 @@
             <h1 id="finalTitle"></h1>
             <div class="final-stars" id="finalStars" aria-hidden="true"></div>
             <p id="finalSummary"></p>
-            <div class="final-score"><strong id="finalScore">0</strong><span>POINTS</span></div>
+            <div class="final-score"><strong id="finalScore">0</strong><span>Points</span></div>
             <div class="stat-grid" id="finalBreakdown">
                 <div class="stat-box good"><strong id="finalCorrect">0</strong><span>Correct</span></div>
                 <div class="stat-box bad"><strong id="finalWrong">0</strong><span>Missed</span></div>
                 <div class="stat-box"><strong id="finalRecovery">–</strong><span>Bonus</span></div>
             </div>
-            <a class="btn-3d primary-btn" id="continueButton" href="/pages/chat.html">Continue to Round 2 💬</a>
+            <a class="btn-3d primary-btn" id="continueButton" href="/pages/chat.html">Continue to round 2 💬</a>
             <a class="secondary-link" href="/pages/menu.html">Play again</a>
         </div>
     </div>
