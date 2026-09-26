@@ -60,8 +60,8 @@
         <section class="answer-panel" aria-labelledby="answerHeading">
             <h2 class="panel-title" id="answerHeading">Who wrote this?</h2>
             <div class="answer-grid">
-                <button type="button" class="btn-3d answer-btn human" id="answerHuman"><span class="answer-emoji" aria-hidden="true">🧑</span>Human</button>
-                <button type="button" class="btn-3d answer-btn ai" id="answerAi"><span class="answer-emoji" aria-hidden="true">🤖</span>AI</button>
+                <button type="button" class="btn-3d answer-btn human" id="answerHuman">Human</button>
+                <button type="button" class="btn-3d answer-btn ai" id="answerAi">AI</button>
             </div>
         </section>
     </main>
@@ -71,6 +71,14 @@
         <div class="ability-actions" id="abilityActions" role="group" aria-label="Power-ups"></div>
         <span class="round-tag">Round 1 · Text Clues</span>
     </footer>
+
+    <div class="power-pop" id="powerPop" role="status" aria-live="polite">
+        <div class="power-pop-rays" aria-hidden="true"></div>
+        <div class="power-pop-ring" aria-hidden="true"></div>
+        <div class="power-pop-sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="power-pop-icon" id="powerPopIcon" aria-hidden="true"></div>
+        <div class="power-pop-text"><strong id="powerPopName"></strong><span id="powerPopNote"></span></div>
+    </div>
 
     <div class="modal-backdrop feedback-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
         <div class="feedback-card" aria-live="polite">
@@ -91,8 +99,8 @@
             <p class="eyebrow" id="recoveryQuestionLabel"></p>
             <blockquote class="recovery-text" id="recoveryText"></blockquote>
             <div class="answer-grid">
-                <button type="button" class="btn-3d answer-btn human" id="recoveryHuman"><span class="answer-emoji" aria-hidden="true">🧑</span>Human</button>
-                <button type="button" class="btn-3d answer-btn ai" id="recoveryAi"><span class="answer-emoji" aria-hidden="true">🤖</span>AI</button>
+                <button type="button" class="btn-3d answer-btn human" id="recoveryHuman">Human</button>
+                <button type="button" class="btn-3d answer-btn ai" id="recoveryAi">AI</button>
             </div>
         </div>
     </div>

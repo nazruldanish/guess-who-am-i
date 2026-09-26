@@ -89,10 +89,29 @@ function renderAbilities() {
     }
 }
 
+const POWER_NOTES = {
+    firewall: 'Your streak is protected this question',
+    lieDetector: 'A clue appeared under the message',
+    overclock: 'Double points if you get it right!',
+    override: 'Skipping this question'
+};
+
+// Big "power-up activated" animation; restarting the CSS class replays it
+function showPowerPop(id) {
+    const pop = $('powerPop');
+    $('powerPopIcon').replaceChildren(window.createAbilityIcon(id));
+    $('powerPopName').textContent = `${abilities[id].name} activated!`;
+    $('powerPopNote').textContent = POWER_NOTES[id];
+    pop.className = `power-pop power-${id}`;
+    void pop.offsetWidth;
+    pop.classList.add('show');
+}
+
 function useAbility(id) {
     if (phase !== 'question' || !selectedAbilities.has(id) || usedAbilities.has(id)) return;
     usedAbilities.add(id);
-    playSound('select');
+    playSound('power');
+    showPowerPop(id);
     if (id === 'firewall') activeFirewall = true;
     if (id === 'overclock') activeOverclock = true;
     if (id === 'lieDetector') {

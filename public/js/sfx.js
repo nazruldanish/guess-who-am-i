@@ -37,7 +37,8 @@
         tick: () => tone(1000, 0, 0.05, 'square', 0.06),
         correct: () => { tone(784, 0, 0.12, 'triangle'); tone(1175, 0.1, 0.25, 'triangle'); },
         wrong: () => { tone(220, 0, 0.18, 'sawtooth', 0.1); tone(160, 0.15, 0.3, 'sawtooth', 0.1); },
-        send: () => tone(740, 0, 0.07, 'sine', 0.1),
+        power: () => { [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.05, 0.14, 'square', 0.07)); tone(1568, 0.28, 0.35, 'triangle', 0.12); },
+        send:() => tone(740, 0, 0.07, 'sine', 0.1),
         receive: () => { tone(600, 0, 0.07, 'sine', 0.1); tone(900, 0.06, 0.08, 'sine', 0.1); },
         win: () => [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.22, 'triangle', 0.14))
     };
