@@ -77,7 +77,7 @@ test('name entry opens loadout on the same page before Round 1', () => {
     assert.equal(document.getElementById('loadoutModal').hidden, false);
     assert.equal(window.location.href, '/pages/menu.html');
     assert.equal(document.getElementById('loadoutGrid').children.length, 4);
-    assert.match(document.getElementById('loadoutGrid').children[0].children[0].innerHTML, /<svg/);
+    assert.match(document.getElementById('loadoutGrid').children[0].children[0].textContent, /🛡️/);
     document.getElementById('loadoutGrid').children[0].click();
     document.getElementById('loadoutGrid').children[2].click();
     assert.equal(document.getElementById('beginButton').disabled, false);
