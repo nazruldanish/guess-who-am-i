@@ -96,7 +96,7 @@ body {
     display: block; width: min(100%, calc(var(--h) * 1658 / 528)); aspect-ratio: 1658 / 528;
     background: linear-gradient(100deg, var(--lime) 0%, #efffc9 45%, var(--lime) 60%, var(--lime-dark) 100%);
     background-size: 220% 100%;
-    -webkit-mask: url(/assets/logo.png) no-repeat; mask: url(/assets/logo.png) no-repeat;
+    -webkit-mask: url(../assets/logo.png) no-repeat; mask: url(../assets/logo.png) no-repeat;
     -webkit-mask-size: 100.85% auto; mask-size: 100.85% auto;
     /* Crops to the artwork (cols 7-1664, rows 205-732 of the 1672x941 file) */
     -webkit-mask-position: 50% 49.6%; mask-position: 50% 49.6%;

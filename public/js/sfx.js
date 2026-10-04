@@ -39,9 +39,9 @@
     // `level`, keeping the clips even with each other and with the tones below. The click is
     // quieter because it plays on every button press.
     const CLIPS = {
-        click: { src: '/assets/music/click.mp3', level: 0.06 },
-        correct: { src: '/assets/music/correct.mp3', level: 0.1 },
-        incorrect: { src: '/assets/music/incorrect.MP3', level: 0.1 }
+        click: { src: '../assets/music/click.mp3', level: 0.06 },
+        correct: { src: '../assets/music/correct.mp3', level: 0.1 },
+        incorrect: { src: '../assets/music/incorrect.MP3', level: 0.1 }
     };
     const MAX_PEAK = 0.9;
 

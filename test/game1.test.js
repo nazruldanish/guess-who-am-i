@@ -59,6 +59,7 @@ function makeGame(abilityList = 'firewall,timeFreeze', lang = 'en') {
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/i18n.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/abilities.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/leaderboard.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/game1.js'), 'utf8'), context);
     return {
         run: expression => vm.runInContext(expression, context),
@@ -107,7 +108,7 @@ test('name entry opens loadout on the same page before Round 1', () => {
     assert.equal(document.getElementById('tipsModal').hidden, false);
     assert.equal(window.location.href, '/pages/menu.html');
     vm.runInContext('startRound()', context);
-    assert.match(window.location.href, /\/pages\/game1\.html\?player=Tester&abilities=firewall%2Coverclock/);
+    assert.match(window.location.href, /^game1\.html\?player=Tester&abilities=firewall%2Coverclock/);
 });
 
 test('12 correct answers go directly to perfect victory with streak points', () => {
@@ -124,7 +125,7 @@ test('12 correct answers go directly to perfect victory with streak points', () 
     assert.equal(game.run('failedQuestions.length'), 0);
     assert.equal(game.get('finalTitle').textContent, 'Perfect score victory');
     assert.equal(game.run('recoveryActive'), false);
-    assert.deepEqual(game.posts, [{ url: '/api/leaderboard', body: { name: 'Tester', avatar: '🙂', score: 2600 } }]);
+    assert.deepEqual(game.posts, [{ url: '../api/leaderboard', body: { name: 'Tester', avatar: '🙂', score: 2600 } }]);
 });
 
 test('right answers are worth more the faster they come: full points down to half at the buzzer', () => {
@@ -317,5 +318,5 @@ test('text questions add their saved DeepSeek reason to the answer explanation',
 
 test('the results button goes back to the menu', () => {
     const html = fs.readFileSync(path.join(__dirname, '../public/pages/game1.html'), 'utf8');
-    assert.match(html, /id="continueButton" href="\/pages\/menu\.html"/);
+    assert.match(html, /id="continueButton" href="menu\.html"/);
 });

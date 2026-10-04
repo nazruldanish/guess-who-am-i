@@ -1,5 +1,5 @@
 // Curtain wipe between screens. Each page reveals itself on load (see "Screen transitions" in app.css);
-// goTo() and internal /pages/ links close the curtain first, then navigate.
+// goTo() and links to other screens in pages/ close the curtain first, then navigate.
 (function () {
     const CLOSE_MS = 650;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -17,8 +17,8 @@
     };
 
     document.addEventListener('click', event => {
-        const link = event.target.closest('a[href^="/pages/"]');
-        if (!link || link.target || event.defaultPrevented || event.button !== 0) return;
+        const link = event.target.closest('a[href]');
+        if (!link || link.origin !== location.origin || !link.pathname.includes('/pages/') || link.target || event.defaultPrevented || event.button !== 0) return;
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
         window.goTo(link.href);

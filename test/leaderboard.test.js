@@ -38,3 +38,22 @@ test('leaderboard keeps each player\'s best score, sorted high to low', async ()
         await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     }
 });
+
+test('without a server (GitHub Pages) the leaderboard is kept on the device', async () => {
+    const vm = require('node:vm');
+    const store = new Map();
+    const window = {};
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../public/js/leaderboard.js'), 'utf8'), {
+        window,
+        fetch: async () => ({ ok: false, status: 404 }),
+        localStorage: { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) },
+        Date
+    });
+
+    await window.leaderboard.save({ name: 'Mei', avatar: '🐼', score: 1200 });
+    await window.leaderboard.save({ name: 'ali', avatar: '🐯', score: 500 });
+    await window.leaderboard.save({ name: 'ALI', avatar: '🐸', score: 1500 });
+    await window.leaderboard.save({ name: 'Mei', avatar: '🐼', score: 100 });
+    const board = JSON.parse(JSON.stringify(await window.leaderboard.load())).map(({ name, score }) => ({ name, score }));
+    assert.deepEqual(board, [{ name: 'ALI', score: 1500 }, { name: 'Mei', score: 1200 }]);
+});

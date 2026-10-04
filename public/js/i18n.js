@@ -35,7 +35,6 @@
 
             'leaderboard.eyebrow': 'Top detectives',
             'leaderboard.empty': 'No scores yet. Be the first!',
-            'leaderboard.error': 'Could not load the leaderboard. Try again later.',
 
             // Settings rows show line icons next to these
             'settings.sfxLabel': 'Sound effects',
@@ -153,7 +152,6 @@
 
             'leaderboard.eyebrow': 'Detektif terhebat',
             'leaderboard.empty': 'Belum ada markah lagi. Jadilah yang pertama!',
-            'leaderboard.error': 'Papan markah tidak dapat dimuatkan. Cuba lagi nanti.',
 
             // Settings rows show line icons next to these
             'settings.sfxLabel': 'Kesan bunyi',

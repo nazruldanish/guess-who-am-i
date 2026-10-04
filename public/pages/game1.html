@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="game1.title">Round 1 | Guess Who Am I?</title>
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/game1.css">
-    <script src="/js/i18n.js" defer></script>
-    <script src="/js/sfx.js" defer></script>
-    <script src="/js/abilities.js" defer></script>
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/game1.css">
+    <script src="../js/i18n.js" defer></script>
+    <script src="../js/sfx.js" defer></script>
+    <script src="../js/abilities.js" defer></script>
     <!-- Pixel avatars + power-up icons: after abilities.js, before game1.js -->
-    <script src="/js/pixel-avatars.js" defer></script>
-    <script src="/js/music.js" data-track="game1"></script>
-    <script src="/js/game1-media.js" defer></script>
-    <script src="/js/transition.js" defer></script>
-    <script src="/js/game1.js" defer></script>
-    <script src="/js/fullscreen.js" defer></script>
-    <script src="/js/settings.js" defer></script>
-    <script src="/js/game1-hud.js" defer></script>
-    <script src="/js/network-bg.js" defer></script>
+    <script src="../js/pixel-avatars.js" defer></script>
+    <script src="../js/music.js" data-track="game1"></script>
+    <script src="../js/game1-media.js" defer></script>
+    <script src="../js/transition.js" defer></script>
+    <script src="../js/leaderboard.js" defer></script>
+    <script src="../js/game1.js" defer></script>
+    <script src="../js/fullscreen.js" defer></script>
+    <script src="../js/settings.js" defer></script>
+    <script src="../js/game1-hud.js" defer></script>
+    <script src="../js/network-bg.js" defer></script>
 </head>
 <body class="v2 bg-green game-v2">
     <div class="v2-bg" aria-hidden="true">
@@ -29,7 +30,7 @@
 
     <header class="hud">
         <div class="hud-left">
-            <a class="hud-logo" href="/pages/menu.html" data-i18n-attr="aria-label: common.backToStart"></a>
+            <a class="hud-logo" href="menu.html" data-i18n-attr="aria-label: common.backToStart"></a>
             <div class="hud-chips" id="streakRow">
                 <span class="hud-chip streak-chip" data-i18n-attr="title: game1.streakTitle">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5.5 5.5 5.5 11.5a5.5 5.5 0 0 1-11 0c0-2.8 1.3-4.4 2.7-5.5.1 2 1 3 2.2 3.4C10.6 8.8 10.9 5 12 2Z" fill="#ff7a1a" stroke="#1c0b3d" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 11.5c.6 2 2.6 2.6 2.6 5a2.6 2.6 0 0 1-5.2 0c0-1.4.8-2.2 1.5-2.7.3.8.8 1.1 1.2 1.1-.4-1.2-.4-2.3-.1-3.4Z" fill="#ffd23f"/></svg>
@@ -138,7 +139,7 @@
                 <div class="results-stat bad"><strong id="finalWrong">0</strong><span class="mono" data-i18n="game1.missed">Missed</span></div>
                 <div class="results-stat"><strong id="finalRecovery">–</strong><span class="mono" data-i18n="game1.bonus">Bonus</span></div>
             </div>
-            <a class="btn-glow results-btn" id="continueButton" href="/pages/menu.html" data-i18n="game1.continue">Back to menu</a>
+            <a class="btn-glow results-btn" id="continueButton" href="menu.html" data-i18n="game1.continue">Back to menu</a>
         </div>
     </section>
 

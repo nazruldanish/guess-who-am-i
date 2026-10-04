@@ -34,7 +34,8 @@ test('organized pages and assets load while old page URLs redirect', async () =>
                 assert.ok(media[type][source].length > 0, `${source} ${type} files listed`);
                 const { src, label } = media[type][source][0];
                 assert.ok(label, `${src} has a label`);
-                const response = await fetch(base + src, { method: 'HEAD' });
+                // Media paths are relative to the pages/ folder
+                const response = await fetch(new URL(src, base + '/pages/'), { method: 'HEAD' });
                 assert.equal(response.status, 200, src);
             }
         }

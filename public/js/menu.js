@@ -71,7 +71,7 @@ function startRound() {
         abilities: [...selectedAbilities].join(','),
         avatar: AVATARS[avatarIndex]
     });
-    const url = '/pages/game1.html?' + params.toString();
+    const url = 'game1.html?' + params.toString();
     if (window.goTo) window.goTo(url); else window.location.href = url;
 }
 
@@ -111,15 +111,8 @@ function renderLeaderboard(entries) {
 async function openLeaderboard() {
     document.getElementById('leaderboardModal').hidden = false;
     const empty = document.getElementById('leaderboardEmpty');
-    try {
-        const response = await fetch('/api/leaderboard');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        renderLeaderboard(await response.json());
-        empty.dataset.i18n = 'leaderboard.empty';
-    } catch {
-        renderLeaderboard([]);
-        empty.dataset.i18n = 'leaderboard.error';
-    }
+    renderLeaderboard(await window.leaderboard.load());
+    empty.dataset.i18n = 'leaderboard.empty';
     empty.textContent = window.i18n.t(empty.dataset.i18n);
 }
 

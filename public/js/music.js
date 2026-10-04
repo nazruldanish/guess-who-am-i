@@ -1,4 +1,4 @@
-// Looping background music. Each page picks its track with <script src="/js/music.js" data-track="menu">.
+// Looping background music. Each page picks its track with <script src="../js/music.js" data-track="menu">.
 (function () {
     const STORAGE_KEY = 'gwai-music-volume';
     const track = document.currentScript?.dataset.track;
@@ -15,7 +15,7 @@
     // and game1 -18.5 dB, so each is scaled to about -19 dB.
     const TRACK_GAIN = { menu: 0.51, game1: 0.94 };
 
-    const music = track ? new Audio(`/assets/music/${track}.mp3`) : null;
+    const music = track ? new Audio(`../assets/music/${track}.mp3`) : null;
     if (music) music.loop = true;
 
     function apply() {

@@ -7,7 +7,8 @@
     "start": "node server.js",
     "test": "node --test test/*.test.js",
     "explain": "node scripts/explain-texts.js",
-    "list-texts": "node scripts/list-texts.js"
+    "list-texts": "node scripts/list-texts.js",
+    "build:pages": "node scripts/build-pages.js"
   },
   "keywords": [],
   "author": "",

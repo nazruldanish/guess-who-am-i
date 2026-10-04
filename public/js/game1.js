@@ -452,11 +452,7 @@ function showFinal() {
 
 // Save the final score to the leaderboard
 function saveRound1Score() {
-    fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: playerName, avatar: playerAvatar, score })
-    }).catch(() => {});
+    window.leaderboard.save({ name: playerName, avatar: playerAvatar, score });
 }
 
 function beginGame() {
@@ -466,7 +462,7 @@ function beginGame() {
 }
 
 if (!playerName || selectedAbilities.size !== 2) {
-    window.location.href = '/pages/menu.html';
+    window.location.href = 'menu.html';
 } else {
     $('playerLabel').textContent = playerName;
     $('playerAvatar').textContent = playerAvatar;

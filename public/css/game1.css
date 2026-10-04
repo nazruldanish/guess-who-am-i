@@ -29,7 +29,7 @@
 .hud-logo {
     --h: 34px; display: block; flex: none; width: calc(var(--h) * 1658 / 528); height: var(--h);
     background: var(--purple-dark);
-    -webkit-mask: url(/assets/logo.png) no-repeat 50% 49.6% / 100.85% auto; mask: url(/assets/logo.png) no-repeat 50% 49.6% / 100.85% auto;
+    -webkit-mask: url(../assets/logo.png) no-repeat 50% 49.6% / 100.85% auto; mask: url(../assets/logo.png) no-repeat 50% 49.6% / 100.85% auto;
     transition: transform .2s, background .2s;
 }
 .hud-logo:hover { transform: scale(1.04); background: var(--violet); }

@@ -20,14 +20,26 @@ Open `http://localhost:3000`. Run checks with `npm test`. If PowerShell blocks `
 | `public/css/` | Stylesheets |
 | `public/js/` | Browser JavaScript |
 | `public/assets/` | Pictures, videos, texts, music and other static assets |
-| `scripts/` | Helper scripts for the text clues (`npm run explain`, `npm run list-texts`) |
+| `lib/` | Builds the Round 1 clue list from the asset folders |
+| `scripts/` | Helper scripts (`npm run build:pages`, `npm run explain`, `npm run list-texts`) |
 | `test/` | Game and route checks |
 
 The server redirects old page URLs such as `/game1.html` to their new locations. Leaderboard scores are saved in `data/leaderboard.json` (not uploaded to Git); delete that file and restart the server to reset the leaderboard.
 
 `npm run explain` asks DeepSeek for a short reason for each Round 1 text. It needs `DEEPSEEK_API_KEY` in a `.env` file (copy `.env.example`); the game itself does not.
 
-## Play online (friends only)
+## Play online
+
+### GitHub Pages (free, no server)
+
+Every push to `main` publishes the game to GitHub Pages through `.github/workflows/pages.yml` (turn it on once in **Settings → Pages → Source: GitHub Actions**). The game is then at `https://<user>.github.io/<repo>/`. To try the static build locally, run `npm run build:pages` and open the `_site/` folder with any static file server.
+
+There is no server on GitHub Pages, so:
+
+- the leaderboard is kept on each player's own device instead of being shared;
+- anyone with the link can play (the site cannot be password protected).
+
+### With the Node server (shared leaderboard, optional password)
 
 Set a `SITE_PASSWORD` environment variable on the server and the browser asks for it before the game loads. Any user name works; only the password is checked. Without `SITE_PASSWORD`, the site is open to everyone.
 
