@@ -1,12 +1,11 @@
 # Guess Who Am I?
 
-A two-round browser game. Round 1 asks players to identify 12 text messages; Round 2 is a live chat with an AI or a human operator.
+A browser game where players look at 12 texts, pictures and videos and guess whether each was made by a human or by AI.
 
 ## Run locally
 
 ```powershell
 npm install
-copy .env.example .env   # then put your DeepSeek API key in .env
 npm start
 ```
 
@@ -16,14 +15,14 @@ Open `http://localhost:3000`. Run checks with `npm test`. If PowerShell blocks `
 
 | Path | Purpose |
 | --- | --- |
-| `server.js` | Express server, Socket.IO events, and DeepSeek API calls |
+| `server.js` | Express server, clue list and leaderboard API |
 | `public/pages/` | Player-facing HTML pages |
-| `public/admin/admin.html` | Human operator page at `/admin/admin.html` |
 | `public/css/` | Stylesheets |
 | `public/js/` | Browser JavaScript |
-| `public/assets/` | Images and other static assets |
+| `public/assets/` | Pictures, videos, texts, music and other static assets |
+| `scripts/` | Helper scripts for the text clues (`npm run explain`, `npm run list-texts`) |
 | `test/` | Game and route checks |
 
-The server redirects old page URLs such as `/game1.html` to their new locations. The operator page remains directly accessible; it does not have sign-in protection.
+The server redirects old page URLs such as `/game1.html` to their new locations. Leaderboard scores are saved in `data/leaderboard.json` (not uploaded to Git); delete that file and restart the server to reset the leaderboard.
 
-The logo in `public/assets/` is kept as a brand asset, but the current pages use a text logo.
+`npm run explain` asks DeepSeek for a short reason for each Round 1 text. It needs `DEEPSEEK_API_KEY` in a `.env` file (copy `.env.example`); the game itself does not.

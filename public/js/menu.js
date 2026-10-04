@@ -1,6 +1,7 @@
 const selectedAbilities = new Set();
 const abilities = window.ABILITY_DEFINITIONS;
-const AVATARS = ['🦊', '🐼', '🐯', '🐸', '🐵', '🦁', '🐨', '🐙', '🦄', '🐧', '🐶', '🐱'];
+// pixel-avatars.js (loaded first on the menu) supplies the pixel-art avatar list
+const AVATARS = window.AVATAR_OPTIONS || ['🦊', '🐼', '🐯', '🐸', '🐵', '🦁', '🐨', '🐙', '🦄', '🐧', '🐶', '🐱'];
 let avatarIndex = Math.floor(Math.random() * AVATARS.length);
 
 const playSound = name => window.sfx?.play(name);
@@ -30,15 +31,13 @@ function renderLoadout() {
         button.addEventListener('click', () => {
             if (selectedAbilities.has(id)) selectedAbilities.delete(id);
             else if (selectedAbilities.size < 2) selectedAbilities.add(id);
-            playSound('select');
             renderLoadout();
         });
         grid.append(button);
     }
     const ready = selectedAbilities.size === 2;
-    document.getElementById('selectionCount').textContent = `${selectedAbilities.size} of 2 selected`;
+    document.getElementById('selectionCount').textContent = window.i18n.t('loadout.count', { n: selectedAbilities.size });
     document.getElementById('beginButton').disabled = !ready;
-    document.getElementById('beginButton').textContent = ready ? 'Start round 1 🚀' : 'Pick 2 power-ups';
 }
 
 function startGame() {
@@ -54,11 +53,17 @@ function startGame() {
         return;
     }
     errorMsg.style.display = 'none';
-    playSound('click');
     document.getElementById('loadoutModal').hidden = false;
 }
 
+// Power-ups chosen: show the "how to spot AI" tips before Round 1 starts
 function beginRound() {
+    if (selectedAbilities.size !== 2) return;
+    document.getElementById('loadoutModal').hidden = true;
+    document.getElementById('tipsModal').hidden = false;
+}
+
+function startRound() {
     if (selectedAbilities.size !== 2) return;
     playSound('start');
     const params = new URLSearchParams({
@@ -66,7 +71,8 @@ function beginRound() {
         abilities: [...selectedAbilities].join(','),
         avatar: AVATARS[avatarIndex]
     });
-    window.location.href = '/pages/game1.html?' + params.toString();
+    const url = '/pages/game1.html?' + params.toString();
+    if (window.goTo) window.goTo(url); else window.location.href = url;
 }
 
 function leaderboardEntry(tag, className, entry) {
@@ -103,29 +109,29 @@ function renderLeaderboard(entries) {
 }
 
 async function openLeaderboard() {
-    playSound('click');
     document.getElementById('leaderboardModal').hidden = false;
     const empty = document.getElementById('leaderboardEmpty');
     try {
         const response = await fetch('/api/leaderboard');
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         renderLeaderboard(await response.json());
-        empty.textContent = 'No scores yet. Be the first!';
+        empty.dataset.i18n = 'leaderboard.empty';
     } catch {
         renderLeaderboard([]);
-        empty.textContent = 'Could not load the leaderboard. Try again later.';
+        empty.dataset.i18n = 'leaderboard.error';
     }
+    empty.textContent = window.i18n.t(empty.dataset.i18n);
 }
 
 renderAvatar();
 renderLoadout();
+window.i18n.onChange(renderLoadout);
 document.getElementById('leaderboardButton').addEventListener('click', openLeaderboard);
 document.getElementById('leaderboardClose').addEventListener('click', () => {
     document.getElementById('leaderboardModal').hidden = true;
 });
 document.getElementById('avatarButton').addEventListener('click', () => {
     avatarIndex = (avatarIndex + 1) % AVATARS.length;
-    playSound('click');
     renderAvatar();
 });
 document.getElementById('startButton').addEventListener('click', startGame);
@@ -137,12 +143,11 @@ document.getElementById('beginButton').addEventListener('click', beginRound);
 document.getElementById('loadoutClose').addEventListener('click', () => {
     document.getElementById('loadoutModal').hidden = true;
 });
+document.getElementById('tipsReadyButton').addEventListener('click', startRound);
+document.getElementById('tipsClose').addEventListener('click', () => {
+    document.getElementById('tipsModal').hidden = true;
+    document.getElementById('loadoutModal').hidden = false;
+});
 document.getElementById('playerName').addEventListener('keydown', event => {
     if (event.key === 'Enter') startGame();
-});
-const soundToggle = document.getElementById('soundToggle');
-soundToggle.checked = window.sfx ? window.sfx.enabled : true;
-soundToggle.addEventListener('change', () => {
-    window.sfx?.setEnabled(soundToggle.checked);
-    playSound('click');
 });

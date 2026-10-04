@@ -3,77 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Round 1 | Guess Who Am I?</title>
+    <title data-i18n="game1.title">Round 1 | Guess Who Am I?</title>
     <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/game1.css">
+    <script src="/js/i18n.js" defer></script>
     <script src="/js/sfx.js" defer></script>
     <script src="/js/abilities.js" defer></script>
+    <!-- Pixel avatars + power-up icons: after abilities.js, before game1.js -->
+    <script src="/js/pixel-avatars.js" defer></script>
+    <script src="/js/music.js" data-track="game1"></script>
+    <script src="/js/game1-media.js" defer></script>
+    <script src="/js/transition.js" defer></script>
     <script src="/js/game1.js" defer></script>
     <script src="/js/fullscreen.js" defer></script>
+    <script src="/js/settings.js" defer></script>
+    <script src="/js/game1-hud.js" defer></script>
+    <script src="/js/network-bg.js" defer></script>
 </head>
-<body class="game-page">
-    <div class="bg-shapes" aria-hidden="true">
-        <span class="tri"></span><span class="circle"></span><span class="square"></span>
-        <span class="diamond"></span><span class="circle"></span><span class="square"></span>
+<body class="v2 bg-green game-v2">
+    <div class="v2-bg" aria-hidden="true">
+        <span class="orb orb-violet"></span>
+        <span class="orb orb-lime"></span>
+        <canvas id="networkBg"></canvas>
     </div>
 
-    <header class="top-bar">
-        <div class="top-left">
-            <a class="brand-mark" href="/pages/menu.html" aria-label="Guess Who Am I? (back to start)"><img src="/assets/logo.png" alt=""></a>
-            <div class="hud-chips top-left" id="streakRow">
-                <span class="hud-chip streak-chip" title="Streak: answers right in a row">
+    <header class="hud">
+        <div class="hud-left">
+            <a class="hud-logo" href="/pages/menu.html" data-i18n-attr="aria-label: common.backToStart"></a>
+            <div class="hud-chips" id="streakRow">
+                <span class="hud-chip streak-chip" data-i18n-attr="title: game1.streakTitle">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5.5 5.5 5.5 11.5a5.5 5.5 0 0 1-11 0c0-2.8 1.3-4.4 2.7-5.5.1 2 1 3 2.2 3.4C10.6 8.8 10.9 5 12 2Z" fill="#ff7a1a" stroke="#1c0b3d" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 11.5c.6 2 2.6 2.6 2.6 5a2.6 2.6 0 0 1-5.2 0c0-1.4.8-2.2 1.5-2.7.3.8.8 1.1 1.2 1.1-.4-1.2-.4-2.3-.1-3.4Z" fill="#ffd23f"/></svg>
                     <strong id="streakDisplay">0</strong>
                 </span>
-                <span class="hud-chip multiplier-chip" id="multiplierChip" title="Bonus multiplier: 3 in a row = 1.5x, 5 in a row = 2x">
-                    <span class="chip-label">Bonus</span><strong id="multiplierDisplay">1.0x</strong>
+                <span class="hud-chip multiplier-chip" id="multiplierChip" data-i18n-attr="title: game1.bonusTitle">
+                    <span class="chip-label mono" data-i18n="game1.bonus">Bonus</span><strong id="multiplierDisplay">1.0x</strong>
                 </span>
             </div>
         </div>
-        <div class="top-right">
-            <span class="hud-chip score-chip" title="Score">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9Z" fill="#d4fb79" stroke="#1c0b3d" stroke-width="1.6" stroke-linejoin="round"/></svg>
-                <span class="chip-label">Score</span><strong id="scoreDisplay">0</strong>
+
+        <!-- One segment per question: filled green/red as you answer (game1-hud.js) -->
+        <div class="progress" id="progressTrack" aria-hidden="true"></div>
+
+        <div class="hud-right">
+            <span class="hud-chip score-chip" data-i18n-attr="title: game1.score">
+                <span class="chip-label mono" data-i18n="game1.score">Score</span><strong id="scoreDisplay">0</strong>
             </span>
-            <button type="button" class="icon-btn" id="fullscreenButton" aria-label="Full screen" title="Full screen">
-                <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
-                <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+            <!-- Clock chip; turns red for the last 3 seconds and ice blue with Time Freeze -->
+            <span class="hud-chip timer-chip" data-i18n-attr="title: game1.timeLeft">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+                <strong id="timerDisplay">0:10</strong>
+            </span>
+            <button type="button" class="hud-icon" id="settingsButton" data-i18n-attr="aria-label: menu.settings; title: menu.settings">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
             </button>
         </div>
     </header>
 
     <main class="game-shell" id="gameShell" hidden>
         <section class="suspect-card" aria-labelledby="suspectHeading">
-            <span class="question-badge" id="questionCount">1 / 12</span>
-            <div class="timer-circle" aria-label="Time left"><strong id="timerDisplay">10</strong></div>
-            <div class="suspect-head">
-                <span class="suspect-avatar" aria-hidden="true">?</span>
-                <div>
-                    <strong id="suspectHeading">Mystery sender #<span id="suspectNumber">01</span></strong>
-                    <small>sent you a message…</small>
+            <div class="card-top">
+                <span class="question-badge mono" id="questionCount">1 / 12</span>
+                <div class="suspect-head">
+                    <strong id="suspectHeading">Text</strong>
                 </div>
             </div>
-            <blockquote class="msg-bubble" id="suspectText"></blockquote>
             <div class="timer-track" aria-hidden="true"><div id="timerBar"></div></div>
-            <p class="analysis-hint" id="analysisHint" hidden></p>
+            <blockquote class="msg-bubble" id="suspectText"></blockquote>
+            <button type="button" class="media-frame" id="suspectMedia" data-i18n-attr="aria-label: game1.enlarge; title: game1.clickToEnlarge" hidden></button>
         </section>
 
         <section class="answer-panel" aria-labelledby="answerHeading">
             <h2 class="panel-title" id="answerHeading">Who wrote this?</h2>
             <div class="answer-grid">
-                <button type="button" class="btn-3d answer-btn human" id="answerHuman">
-                    <span class="answer-label">Human</span>
+                <button type="button" class="answer-btn human" id="answerHuman" data-click-sound="off">
+                    <svg class="answer-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                    <span class="answer-label" data-i18n="common.human">Human</span>
                     <strong class="answer-points" id="answerHumanPoints" hidden></strong>
                 </button>
-                <button type="button" class="btn-3d answer-btn ai" id="answerAi">
-                    <span class="answer-label">AI</span>
+                <button type="button" class="answer-btn ai" id="answerAi" data-click-sound="off">
+                    <svg class="answer-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 7V3M9 12h.01M15 12h.01M9 16h6M2 12h3M19 12h3"/></svg>
+                    <span class="answer-label" data-i18n="common.ai">AI</span>
                     <strong class="answer-points" id="answerAiPoints" hidden></strong>
                 </button>
             </div>
             <div class="feedback-bar" id="feedbackBar" aria-live="polite" hidden>
                 <p><strong id="feedbackTitle"></strong> <span id="feedbackText"></span></p>
                 <div class="feedback-actions">
-                    <span class="feedback-countdown"><span id="feedbackCountdownLabel">Next question in</span> <strong id="feedbackSeconds">5</strong>s</span>
-                    <button type="button" class="btn-3d feedback-next" id="feedbackNextButton">Next question ➜</button>
+                    <span class="feedback-countdown mono"><span id="feedbackCountdownLabel">Next question in</span> <strong id="feedbackSeconds">10</strong>s</span>
+                    <button type="button" class="feedback-next" id="feedbackNextButton">Next question</button>
                 </div>
             </div>
         </section>
@@ -81,8 +98,8 @@
 
     <footer class="bottom-bar">
         <div class="player-chip"><span class="chip-avatar" id="playerAvatar">🙂</span><strong id="playerLabel"></strong></div>
-        <div class="ability-actions" id="abilityActions" role="group" aria-label="Power-ups"></div>
-        <span class="round-tag">Round 1 · Text clues</span>
+        <div class="ability-actions" id="abilityActions" role="group" data-i18n-attr="aria-label: game1.powerUps"></div>
+        <span class="round-tag mono" id="roundTag">Round 1 · Quiz</span>
     </footer>
 
     <div class="power-pop" id="powerPop" role="status" aria-live="polite">
@@ -93,36 +110,61 @@
         <div class="power-pop-text"><strong id="powerPopName"></strong><span id="powerPopNote"></span></div>
     </div>
 
-    <div class="modal-backdrop" id="recoveryModal" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle" hidden>
-        <div class="modal-card recovery-card">
-            <span class="eyebrow pill-eyebrow">Bonus chance</span>
-            <h1 id="recoveryTitle">🎁 Second chance!</h1>
-            <p>Try one question you missed. Get it right to win 50 extra points.</p>
-            <p class="eyebrow" id="recoveryQuestionLabel"></p>
-            <blockquote class="recovery-text" id="recoveryText"></blockquote>
-            <div class="answer-grid">
-                <button type="button" class="btn-3d answer-btn human" id="recoveryHuman">Human</button>
-                <button type="button" class="btn-3d answer-btn ai" id="recoveryAi">AI</button>
-            </div>
+    <div class="chance-pop" id="chancePop" role="status" aria-live="polite">
+        <div class="chance-pop-rays" aria-hidden="true"></div>
+        <div class="chance-pop-content">
+            <div class="chance-pop-gift" aria-hidden="true">🎁</div>
+            <strong class="chance-pop-title" data-i18n="game1.secondChance">Second chance!</strong>
+            <span class="chance-pop-note" id="chancePopNote"></span>
         </div>
     </div>
 
-    <div class="modal-backdrop" id="finalModal" role="dialog" aria-modal="true" aria-labelledby="finalTitle" hidden>
+    <div class="media-viewer" id="mediaViewer" role="dialog" aria-modal="true" data-i18n-attr="aria-label: game1.enlargedView" hidden>
+        <button type="button" class="close-btn" id="mediaViewerClose" data-i18n-attr="aria-label: common.close">✕</button>
+        <div class="media-viewer-content" id="mediaViewerContent"></div>
+    </div>
+
+    <!-- Full-screen Round 1 results -->
+    <section class="results-screen" id="finalScreen" aria-labelledby="finalTitle" hidden>
+        <div class="results-rays" aria-hidden="true"></div>
         <div class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="modal-card final-card">
-            <div class="trophy" aria-hidden="true">🏆</div>
-            <span class="eyebrow pill-eyebrow">Round 1 complete</span>
-            <h1 id="finalTitle"></h1>
-            <div class="final-stars" id="finalStars" aria-hidden="true"></div>
-            <p id="finalSummary"></p>
-            <div class="final-score"><strong id="finalScore">0</strong><span>Points</span></div>
-            <div class="stat-grid" id="finalBreakdown">
-                <div class="stat-box good"><strong id="finalCorrect">0</strong><span>Correct</span></div>
-                <div class="stat-box bad"><strong id="finalWrong">0</strong><span>Missed</span></div>
-                <div class="stat-box"><strong id="finalRecovery">–</strong><span>Bonus</span></div>
+        <div class="results-content">
+            <div class="results-icon" aria-hidden="true">🏆</div>
+            <span class="results-eyebrow mono" data-i18n="game1.roundComplete">Round 1 complete</span>
+            <h1 class="results-title" id="finalTitle"></h1>
+            <div class="results-total"><strong id="finalScore">0</strong><span class="mono" data-i18n="game1.points">Points</span></div>
+            <div class="results-stats">
+                <div class="results-stat good"><strong id="finalCorrect">0</strong><span class="mono" data-i18n="game1.correctCount">Correct</span></div>
+                <div class="results-stat bad"><strong id="finalWrong">0</strong><span class="mono" data-i18n="game1.missed">Missed</span></div>
+                <div class="results-stat"><strong id="finalRecovery">–</strong><span class="mono" data-i18n="game1.bonus">Bonus</span></div>
             </div>
-            <a class="btn-3d primary-btn" id="continueButton" href="/pages/chat.html">Continue to round 2 💬</a>
-            <a class="secondary-link" href="/pages/menu.html">Play again</a>
+            <a class="btn-glow results-btn" id="continueButton" href="/pages/menu.html" data-i18n="game1.continue">Back to menu</a>
+        </div>
+    </section>
+
+    <div class="modal-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+        <div class="modal-card settings-card">
+            <button type="button" class="close-btn" id="settingsClose" data-i18n-attr="aria-label: common.close">✕</button>
+            <h1 id="settingsTitle" data-i18n="menu.settings">Settings</h1>
+            <div class="setting-row volume-row">
+                <label class="setting-label" for="sfxVolume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span data-i18n="settings.sfxLabel">Sound effects</span></label>
+                <input type="range" class="volume-range" id="sfxVolume" min="0" max="100" step="5" value="100">
+                <output class="volume-value" id="sfxVolumeValue" for="sfxVolume">100%</output>
+            </div>
+
+            <div class="setting-row volume-row">
+                <label class="setting-label" for="musicVolume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span data-i18n="settings.musicLabel">Music</span></label>
+                <input type="range" class="volume-range" id="musicVolume" min="0" max="100" step="5" value="100">
+                <output class="volume-value" id="musicVolumeValue" for="musicVolume">100%</output>
+            </div>
+
+            <div class="setting-row" id="fullscreenRow">
+                <span class="setting-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span data-i18n="common.fullscreen">Full screen</span></span>
+                <label class="switch">
+                    <input type="checkbox" id="fullscreenToggle" data-i18n-attr="aria-label: common.fullscreen">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
 </body>

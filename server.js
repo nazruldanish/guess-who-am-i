@@ -2,21 +2,17 @@ const express = require('express');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { Server } = require('socket.io');
-const OpenAI = require('openai');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
-// Root redirects to name-entry page (must be BEFORE static middleware)
-app.get('/', (req, res) => res.redirect('/pages/menu.html'));
+// Root serves the shell page, which shows each screen in a frame so full screen survives moving between screens
+// (must be BEFORE static middleware).
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shell.html')));
 
 const oldPagePaths = {
     '/menu.html': '/pages/menu.html',
     '/game1.html': '/pages/game1.html',
-    '/index.html': '/pages/chat.html',
-    '/admin.html': '/admin/admin.html',
 };
 for (const [oldPath, newPath] of Object.entries(oldPagePaths)) {
     app.get(oldPath, (req, res) => {
@@ -24,6 +20,69 @@ for (const [oldPath, newPath] of Object.entries(oldPagePaths)) {
         res.redirect(newPath + query);
     });
 }
+
+// Round 1 clue pool, read from the asset folders so newly added files are picked up.
+// Pictures/videos are labelled by file name and shared by both languages;
+// texts live in assets/texts/<lang>/<Topic>/{ai,human}/*.txt, each with an optional *.why reason,
+// and each topic can have a prompt.txt for the writing pop-up.
+const GAME1_MEDIA_FOLDERS = { image: ['pictures', /\.(png|jpe?g|webp|gif)$/i], video: ['videos', /\.(mp4|webm)$/i] };
+const GAME1_LANGUAGES = ['en', 'ms'];
+const ASSETS_DIR = path.join(__dirname, 'public', 'assets');
+const TEXTS_DIR = process.env.TEXTS_DIR || path.join(ASSETS_DIR, 'texts');
+
+function readFolder(folder) {
+    try {
+        return fs.readdirSync(folder);
+    } catch {
+        return [];
+    }
+}
+
+// "Movie_Poster (2).jpg" -> "Movie Poster"
+function labelFromFile(file) {
+    return path.parse(file).name.replace(/[_]+/g, ' ').replace(/\s*(\(\d+\)|[-\s]\d+)$/, '').trim();
+}
+
+function listGame1Media() {
+    const media = {};
+    for (const [type, [suffix, pattern]] of Object.entries(GAME1_MEDIA_FOLDERS)) {
+        media[type] = {};
+        for (const source of ['ai', 'human']) {
+            const folder = `${source}_${suffix}`;
+            media[type][source] = readFolder(path.join(ASSETS_DIR, folder)).filter(file => pattern.test(file))
+                .map(file => ({ src: `/assets/${folder}/${encodeURIComponent(file)}`, label: labelFromFile(file) }));
+        }
+    }
+    media.text = {};
+    media.labels = {};
+    for (const lang of GAME1_LANGUAGES) {
+        media.text[lang] = { ai: [], human: [] };
+        const textsDir = path.join(TEXTS_DIR, lang);
+        for (const topic of readFolder(textsDir)) {
+            for (const source of ['ai', 'human']) {
+                const folder = path.join(textsDir, topic, source);
+                for (const file of readFolder(folder).filter(file => /\.txt$/i.test(file))) {
+                    const text = fs.readFileSync(path.join(folder, file), 'utf8').trim();
+                    // Optional <name>.why next to the text: a short reason shown after answering (npm run explain)
+                    let why = '';
+                    try { why = fs.readFileSync(path.join(folder, file.replace(/\.txt$/i, '.why')), 'utf8').trim(); } catch {}
+                    if (text) media.text[lang][source].push(why ? { text, label: topic, why } : { text, label: topic });
+                }
+            }
+        }
+        // Optional labels-<lang>.json translates picture/video labels: { "file name label": "translated label" }
+        try {
+            const file = fs.readFileSync(path.join(ASSETS_DIR, `labels-${lang}.json`), 'utf8').replace(/^﻿/, '');
+            const labels = JSON.parse(file);
+            media.labels[lang] = Object.fromEntries(Object.entries(labels).map(([key, value]) => [key.toLowerCase(), value]));
+        } catch {}
+    }
+    return media;
+}
+
+app.get('/js/game1-media.js', (req, res) => {
+    res.type('application/javascript').send(`window.GAME1_MEDIA = ${JSON.stringify(listGame1Media())};\n`);
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '2kb' }));
@@ -67,114 +126,6 @@ app.post('/api/leaderboard', (req, res) => {
     res.json(leaderboard.slice(0, LEADERBOARD_SIZE));
 });
 
-// Load secrets from .env (kept out of Git by .gitignore).
-try {
-    process.loadEnvFile(path.join(__dirname, '.env'));
-} catch {
-    console.warn('No .env file found. Copy .env.example to .env and add your DeepSeek API key.');
-}
-
-// DeepSeek supports the OpenAI-compatible chat completions API.
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || 'missing-api-key';
-
-const ai = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
-    apiKey: DEEPSEEK_API_KEY,
-});
-
-const sessions = {};
-
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
-    socket.on('startGame', () => {
-        const isAI = Math.random() > 0.3;
-
-        // Store conversation history for DeepSeek (OpenAI-style messages array)
-        const systemPrompt = `You are playing a human in a chat game. Users will chat with you and must guess if you are human or AI. Your goal is to convince them you are human.
-
-Rules:
-- Match the user's language and tone. Speak Malay by default.
-- Reply short, like a normal casual chat. Usually 1-2 sentences.
-- Do not use perfect grammar or structure every time.
-- Do not use bullet points or lists.
-- Do not be overly helpful or eager.
-- Occasionally ask a question back, but not every reply.
-- Sometimes say you are not sure, or that you do not know something.
-- Never admit you are an AI unless directly and repeatedly pressed.
-- Avoid sounding like a customer service bot.
-- No emoji spam. Use emoji rarely, if at all.
-- If the user talks about random topics, go along with it naturally.`;
-
-        sessions[socket.id] = {
-            isAI: isAI,
-            messages: [
-                { role: 'system', content: systemPrompt }
-            ]
-        };
-
-        console.log(`Session ${socket.id} started. Routed to AI? ${isAI}`);
-        socket.emit('gameStarted', { isAI });
-    });
-
-    socket.on('studentMessage', async (msg) => {
-        const session = sessions[socket.id];
-        if (!session) return;
-
-        if (session.isAI) {
-            // THE REAL AI ROUTE (WITH AUTO-RETRY)
-            const tryDeepSeek = async (retries = 3) => {
-                // Append the user's message to history
-                session.messages.push({ role: 'user', content: msg });
-
-                for (let i = 0; i < retries; i++) {
-                    try {
-                        console.log(`[Attempt ${i + 1}] Reaching out to DeepSeek...`);
-
-                        const response = await ai.chat.completions.create({
-                            model: 'deepseek-flash',
-                            messages: session.messages,
-                        });
-
-                        const reply = response.choices[0].message.content;
-                        // Append assistant reply to history for context
-                        session.messages.push({ role: 'assistant', content: reply });
-
-                        console.log(`[Attempt ${i + 1}] Success! Response received.`);
-                        return reply;
-
-                    } catch (error) {
-                        console.error(`[Attempt ${i + 1}] Failed:`, error.message);
-                        if (i === retries - 1) throw error;
-                        console.log(`Waiting 2 seconds before retrying...`);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
-                }
-            };
-
-            try {
-                const aiReply = await tryDeepSeek();
-                socket.emit('receiveReply', ` [AI]: ${aiReply}`);
-            } catch (error) {
-                console.error("AI Error Final:", error);
-                socket.emit('receiveReply', ` [System]: Sorry, my brain lagged.`);
-            }
-        } else {
-            // THE HUMAN ROUTE
-            io.emit('adminReceive', { id: socket.id, msg: msg });
-        }
-    });
-
-    socket.on('adminReply', (data) => {
-        io.to(data.id).emit('receiveReply', ` [Human]: ${data.msg}`);
-    });
-
-    socket.on('disconnect', () => {
-        delete sessions[socket.id];
-        console.log('User disconnected:', socket.id);
-    });
-});
-
 if (require.main === module) {
     const port = Number(process.env.PORT) || 3000;
     server.listen(port, '0.0.0.0', () => {
@@ -183,3 +134,4 @@ if (require.main === module) {
 }
 
 module.exports = { app, server };
+

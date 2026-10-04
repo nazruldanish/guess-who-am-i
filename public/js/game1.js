@@ -1,29 +1,80 @@
-const BASE_POINTS = 100;
 const QUESTION_SECONDS = 10;
-const FEEDBACK_SECONDS = 5;
+// Speed scoring: a right answer is worth the full amount straight away, sliding down to half at the buzzer
+const MAX_POINTS = { text: 100, image: 125, video: 150 };
+const SLOWEST_SHARE = 0.5;
+const SKIP_POINTS = 100;
+const SECOND_CHANCE_POINTS = 50;
+const FEEDBACK_SECONDS = 10;
+const SECOND_CHANCE_INTRO_MS = 2600;
 
 const abilities = window.ABILITY_DEFINITIONS;
+const { t, lang } = window.i18n;
 
-const questions = [
-    { id: 1, text: 'aiyoo benda ni susah gila ah. aku dah cuba 3 kali still salah. rasa nak buang laptop terus. ke kau ada idea lain tak?', answer: 'human', explanation: 'This sounds like someone chatting while upset.', hint: 'The writer sounds upset and uses short, casual words.' },
-    { id: 2, text: 'In Malaysia, various culinary traditions have converged over centuries, resulting in a diverse gastronomic landscape. Dishes such as Nasi Lemak, Char Kway Teow, and Roti Canai represent a harmonious blend of influences.', answer: 'ai', explanation: 'It sounds like a neat report, not a quick chat.', hint: 'The words sound very formal for a chat message.' },
-    { id: 3, text: 'weh aku tadi nampak kau kat mamak tapi kau tak perasan. aku dah lambai-lambai macam orang gila. malu gila do', answer: 'human', explanation: 'This tells a funny, personal story about seeing a friend.', hint: 'The writer talks about something that just happened to them.' },
-    { id: 4, text: 'To address your query, an effective study strategy involves spaced repetition, active recall, and adequate rest. Reviewing material at increasing intervals can support long-term retention.', answer: 'ai', explanation: 'It sounds like a prepared answer to a question.', hint: 'The first words sound like a school report.' },
-    { id: 5, text: 'bro kau ingat tak masa form 3 kita main bola hujan-hujan sampai cikgu marah? best gila. rindu ah zaman tu', answer: 'human', explanation: 'The writer remembers a day they shared with a friend.', hint: 'The writer expects their friend to remember the same day.' },
-    { id: 6, text: 'Certainly! Here are three practical ways to prepare for your presentation: outline your key points, rehearse aloud, and leave time for questions.', answer: 'ai', explanation: 'The tidy list sounds like advice from an AI helper.', hint: 'The advice is packed into a neat list.' },
-    { id: 7, text: 'aku dah sampai depan library. eh silap, depan cafe sebelah library. kau kat mana?', answer: 'human', explanation: 'The writer fixes a mistake while sending a quick update.', hint: 'The writer corrects their location in the same message.' },
-    { id: 8, text: 'The event offers an opportunity for students to connect, exchange ideas, and cultivate meaningful relationships within a supportive campus environment.', answer: 'ai', explanation: 'This sounds like a poster. It gives no personal details.', hint: 'It sounds like an ad for a school event.' },
-    { id: 9, text: 'sorry lambat reply, tertidur dalam bas tadi. nasib driver kejut aku kalau tak sampai terminal', answer: 'human', explanation: 'The writer tells a small story about falling asleep on a bus.', hint: 'There is a clear reason for the late reply.' },
-    { id: 10, text: 'If you are feeling overwhelmed, consider breaking your tasks into smaller steps and prioritizing the most urgent item first. Remember to take regular breaks.', answer: 'ai', explanation: 'This advice could be given to almost anyone.', hint: 'The advice is helpful but does not mention anything personal.' },
-    { id: 11, text: 'weh siapa ambik charger aku kat studio? cable dia dah koyak sikit tu, jangan buat-buat tak nampak', answer: 'human', explanation: 'The writer is upset about their own charger.', hint: 'The writer knows a small detail about the charger.' },
-    { id: 12, text: 'Thank you for sharing your perspective. While both options have merits, the best choice depends on your goals, available time, and preferred learning style.', answer: 'ai', explanation: 'It gives a careful answer without picking a side.', hint: 'The writer talks about both choices but never picks one.' }
-];
+// 12 questions: 5 texts (one per topic), then 4 pictures, then 3 videos
+const QUESTION_MIX = [['text', 5], ['image', 4], ['video', 3]];
+
+function shuffle(list) {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+// Random pick that never makes every question of a type all-AI or all-human
+function pickMixed(pool, count) {
+    const ai = shuffle(pool.filter(item => item.answer === 'ai'));
+    const human = shuffle(pool.filter(item => item.answer === 'human'));
+    const minAi = Math.max(1, count - human.length);
+    const maxAi = Math.min(count - 1, ai.length);
+    if (minAi > maxAi) return shuffle([...ai, ...human]).slice(0, count);
+    const aiCount = minAi + Math.floor(Math.random() * (maxAi - minAi + 1));
+    return shuffle([...ai.slice(0, aiCount), ...human.slice(0, count - aiCount)]);
+}
+
+// One random clue from each of `count` random topics, still never all-AI or all-human
+function pickOnePerTopic(pool, count) {
+    const byTopic = new Map();
+    for (const item of pool) byTopic.set(item.label, [...(byTopic.get(item.label) || []), item]);
+    const topics = shuffle([...byTopic.values()]).slice(0, count);
+    const picked = topics.map(items => items[Math.floor(Math.random() * items.length)]);
+    if (picked.length > 1 && picked.every(item => item.answer === picked[0].answer)) {
+        const flip = shuffle(topics.map((items, index) => index))
+            .find(index => topics[index].some(item => item.answer !== picked[0].answer));
+        if (flip !== undefined) picked[flip] = shuffle(topics[flip].filter(item => item.answer !== picked[0].answer))[0];
+    }
+    return picked;
+}
+
+// Texts, pictures and videos come from the asset folders (served as window.GAME1_MEDIA), each with a
+// topic label shown above the clue. Texts are per language (English texts stand in until a language has
+// its own); picture/video labels are translated through media.labels.
+const textLanguage = media => media.text?.[lang]?.ai?.length && media.text[lang].human?.length ? lang : 'en';
+
+function buildQuestions(media = window.GAME1_MEDIA || {}) {
+    const texts = media.text?.[textLanguage(media)];
+    const labels = media.labels?.[lang] || {};
+    const clues = { text: texts, image: media.image, video: media.video };
+    const picked = QUESTION_MIX.flatMap(([type, count]) => {
+        const pool = ['ai', 'human'].flatMap(answer =>
+            (clues[type]?.[answer] || []).map(clue => ({
+                ...clue, label: labels[clue.label?.toLowerCase()] || clue.label,
+                type, answer, explanation: t(`game1.${type}.${answer}`) + (clue.why ? ` ${clue.why}` : '')
+            })));
+        return type === 'text' ? pickOnePerTopic(pool, count) : pickMixed(pool, count);
+    });
+    return picked.map((question, index) => ({ ...question, id: index + 1 }));
+}
+
+const questions = buildQuestions();
 
 const FEEDBACK_STYLES = {
-    correct: { title: '✅ Correct!', sound: 'correct' },
-    wrong: { title: '❌ Oops!', sound: 'wrong' },
-    timeout: { title: "⏰ Time's up!", sound: 'wrong' },
-    skip: { title: '⏭️ Skipped!', sound: 'click' }
+    correct: { title: 'game1.correct', sound: 'correct' },
+    wrong: { title: 'game1.wrong', sound: 'incorrect' },
+    timeout: { title: 'game1.timeout', sound: 'incorrect' },
+    // The Skip tile already played its click and power-up sound
+    skip: { title: 'game1.skip', sound: null }
 };
 
 const ANSWER_BUTTONS = [['answerHuman', 'human'], ['answerAi', 'ai']];
@@ -44,6 +95,7 @@ let phase = 'loadout';
 let activeFirewall = false;
 let activeOverclock = false;
 let recoveryQuestion = null;
+let recoveryActive = false;
 let recoveryResult = 'none';
 
 const $ = id => document.getElementById(id);
@@ -72,7 +124,7 @@ function renderAbilities() {
         const active = (id === 'firewall' && activeFirewall) || (id === 'overclock' && activeOverclock);
         const used = usedAbilities.has(id);
         button.className = `power-tile power-${id}` + (active ? ' active' : '') + (used ? ' used' : '');
-        const status = active ? ' (on)' : used ? ' (used)' : '';
+        const status = active ? t('ability.on') : used ? t('ability.used') : '';
         button.setAttribute('aria-label', `${abilities[id].name}${status}: ${abilities[id].description}`);
 
         // Name + description card shown on hover / keyboard focus
@@ -91,19 +143,12 @@ function renderAbilities() {
     }
 }
 
-const POWER_NOTES = {
-    firewall: 'Your streak is protected this question',
-    lieDetector: 'A clue appeared under the message',
-    overclock: 'Double points if you get it right!',
-    override: 'Skipping this question'
-};
-
 // Big "power-up activated" animation; restarting the CSS class replays it
 function showPowerPop(id) {
     const pop = $('powerPop');
     $('powerPopIcon').replaceChildren(window.createAbilityIcon(id));
-    $('powerPopName').textContent = `${abilities[id].name} activated!`;
-    $('powerPopNote').textContent = POWER_NOTES[id];
+    $('powerPopName').textContent = t('ability.activated', { name: abilities[id].name });
+    $('powerPopNote').textContent = t(`ability.${id}.note`);
     pop.className = `power-pop power-${id}`;
     void pop.offsetWidth;
     pop.classList.add('show');
@@ -116,16 +161,18 @@ function useAbility(id) {
     showPowerPop(id);
     if (id === 'firewall') activeFirewall = true;
     if (id === 'overclock') activeOverclock = true;
-    if (id === 'lieDetector') {
-        $('analysisHint').textContent = `🔍 Clue: ${questions[currentQuestionIndex].hint}`;
-        $('analysisHint').hidden = false;
+    if (id === 'timeFreeze') {
+        frozenMsLeft = timeLeftMs();
+        stopTimer();
+        $('timerDisplay').classList.remove('urgent');
+        $('timerDisplay').classList.add('frozen');
     }
     if (id === 'override') {
         stopTimer();
-        score += BASE_POINTS;
+        score += SKIP_POINTS;
         streak = 0;
         multiplier = 1;
-        completeQuestion('skip', `+${BASE_POINTS}`, 'You skipped this one. Your streak has ended.');
+        completeQuestion('skip', `+${SKIP_POINTS}`, t('game1.skipped'));
     } else renderAbilities();
 }
 
@@ -141,22 +188,39 @@ function stopFeedbackTimer() {
     feedbackTickId = null;
 }
 
+// "0:08" (m:ss)
+const clock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+
+// Time left on the current question in ms; Time Freeze pins it at the moment it was used
+let questionDeadline = 0;
+let frozenMsLeft = null;
+const timeLeftMs = () => frozenMsLeft ?? Math.max(0, questionDeadline - Date.now());
+
+// Points for a right answer: full while the clock is full, down to SLOWEST_SHARE at the buzzer, to the nearest 5
+function speedPoints(type) {
+    const share = SLOWEST_SHARE + (1 - SLOWEST_SHARE) * timeLeftMs() / (QUESTION_SECONDS * 1000);
+    return MAX_POINTS[type] * share;
+}
+const roundPoints = points => Math.round(points / 5) * 5;
+
 function startTimer() {
     stopTimer();
     const deadline = Date.now() + QUESTION_SECONDS * 1000;
+    questionDeadline = deadline;
+    frozenMsLeft = null;
     let lastShown = QUESTION_SECONDS;
-    $('timerDisplay').classList.remove('urgent');
-    $('timerDisplay').textContent = QUESTION_SECONDS;
+    $('timerDisplay').classList.remove('urgent', 'frozen');
+    $('timerDisplay').textContent = clock(QUESTION_SECONDS);
     $('timerBar').style.width = '100%';
     timerId = setInterval(() => {
         const msLeft = Math.max(0, deadline - Date.now());
         const remaining = Math.ceil(msLeft / 1000);
-        $('timerDisplay').textContent = remaining;
+        $('timerDisplay').textContent = clock(remaining);
         $('timerDisplay').classList.toggle('urgent', remaining <= 3);
         $('timerBar').style.width = `${msLeft / (QUESTION_SECONDS * 1000) * 100}%`;
         if (remaining !== lastShown && remaining > 0 && remaining <= 3) playSound('tick');
         lastShown = remaining;
-        if (remaining === 0) submitAnswer(null);
+        if (remaining === 0) phase === 'recovery' ? submitRecovery(null) : submitAnswer(null);
     }, 100);
 }
 
@@ -166,25 +230,94 @@ function loadQuestion() {
     activeOverclock = false;
     const question = questions[currentQuestionIndex];
     $('questionCount').textContent = `${question.id} / ${questions.length}`;
-    $('suspectNumber').textContent = String(question.id).padStart(2, '0');
-    $('suspectText').textContent = question.text;
-    $('analysisHint').hidden = true;
-    $('analysisHint').textContent = '';
-    $('feedbackBar').hidden = true;
-    for (const [id] of ANSWER_BUTTONS) {
-        $(id).disabled = false;
-        $(id).classList.remove('result-correct', 'result-wrong');
-        $(id + 'Points').hidden = true;
-    }
+    showSuspect(question);
+    resetAnswerBoxes(true);
     updateStats();
     renderAbilities();
     startTimer();
 }
 
+// Pictures and videos never play sound: videos are always muted and have no controls
+function createMedia(question) {
+    if (question.type === 'image') {
+        const image = document.createElement('img');
+        image.src = question.src;
+        image.alt = question.label || t('game1.image.round');
+        return image;
+    }
+    const video = document.createElement('video');
+    video.src = question.src;
+    video.muted = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    return video;
+}
+
+function showSuspect(question) {
+    const type = question.type;
+    const isText = question.type === 'text';
+    closeMediaViewer();
+    const label = question.label || t(`game1.${type}.label`);
+    // Text questions name the situation ("Situation: Late For School"); pictures and videos show their label as is
+    $('suspectHeading').textContent = isText ? t('game1.situation', { topic: label }) : label;
+    $('answerHeading').textContent = t(`game1.${type}.heading`);
+    $('roundTag').textContent = t('game1.roundTag');
+    $('suspectText').hidden = !isText;
+    $('suspectText').textContent = isText ? question.text : '';
+    $('suspectMedia').hidden = isText;
+    $('gameShell').classList.toggle('media-question', !isText);
+    $('suspectMedia').replaceChildren(...(isText ? [] : [createMedia(question)]));
+}
+
+function currentQuestion() {
+    return recoveryActive ? recoveryQuestion : questions[currentQuestionIndex];
+}
+
+function openMediaViewer() {
+    const question = currentQuestion();
+    if (question.type === 'text') return;
+    const media = createMedia(question);
+    const small = $('suspectMedia').querySelector('video');
+    if (small && media.tagName === 'VIDEO') media.currentTime = small.currentTime;
+    $('mediaViewerContent').replaceChildren(media);
+    $('mediaViewer').hidden = false;
+    $('mediaViewerClose').focus();
+}
+
+function closeMediaViewer() {
+    if ($('mediaViewer').hidden) return;
+    $('mediaViewer').hidden = true;
+    $('mediaViewerContent').replaceChildren();
+}
+
+// Load the picked pictures and videos early so they show up right away
+const preloadedMedia = questions.filter(question => question.type !== 'text').map(question => {
+    const element = document.createElement(question.type === 'image' ? 'img' : 'video');
+    element.preload = 'auto';
+    element.src = question.src;
+    return element;
+});
+
+function resetAnswerBoxes(enabled) {
+    $('feedbackBar').hidden = true;
+    for (const [id] of ANSWER_BUTTONS) {
+        $(id).disabled = !enabled;
+        $(id).classList.remove('result-correct', 'result-wrong');
+        $(id + 'Points').hidden = true;
+    }
+}
+
+function currentAnswer() {
+    return currentQuestion().answer;
+}
+
 // Colour the answer boxes: the picked box turns green/red, the right answer is
 // shown in green, and the points won pop up briefly over the box
 function showAnswerResult(kind, choice, points) {
-    const answer = questions[currentQuestionIndex].answer;
+    const answer = currentAnswer();
     for (const [id, value] of ANSWER_BUTTONS) {
         const resultClass = value === answer ? 'result-correct' : value === choice ? 'result-wrong' : '';
         const pointsBadge = $(id + 'Points');
@@ -199,18 +332,18 @@ function showAnswerResult(kind, choice, points) {
 function completeQuestion(kind, points, message, choice = null) {
     phase = 'feedback';
     stopTimer();
+    closeMediaViewer();
     const style = FEEDBACK_STYLES[kind];
     showAnswerResult(kind, choice, points);
-    $('feedbackTitle').textContent = style.title;
+    $('feedbackTitle').textContent = t(style.title);
     $('feedbackText').textContent = message;
     $('feedbackBar').hidden = false;
     playSound(style.sound);
-    $('feedbackCountdownLabel').textContent = currentQuestionIndex === questions.length - 1
-        ? (failedQuestions.length ? 'Bonus chance in' : 'Results in')
-        : 'Next question in';
-    $('feedbackNextButton').textContent = currentQuestionIndex === questions.length - 1
-        ? (failedQuestions.length ? 'Bonus chance 🎁' : 'See results 🏆')
-        : 'Next question ➜';
+    const lastQuestion = currentQuestionIndex === questions.length - 1;
+    const upNext = recoveryActive || (lastQuestion && !failedQuestions.length) ? 'results'
+        : lastQuestion ? 'bonus' : 'next';
+    $('feedbackCountdownLabel').textContent = t({ results: 'game1.resultsIn', bonus: 'game1.secondChanceIn', next: 'game1.nextQuestionIn' }[upNext]);
+    $('feedbackNextButton').textContent = t({ results: 'game1.seeResults', bonus: 'game1.secondChanceButton', next: 'game1.nextQuestion' }[upNext]);
     $('feedbackSeconds').textContent = FEEDBACK_SECONDS;
     const deadline = Date.now() + FEEDBACK_SECONDS * 1000;
     feedbackTickId = setInterval(() => {
@@ -228,19 +361,19 @@ function submitAnswer(choice) {
         correctAnswers++;
         streak++;
         multiplier = calculateMultiplier();
-        const points = BASE_POINTS * multiplier * (activeOverclock ? 2 : 1);
+        const points = roundPoints(speedPoints(question.type) * multiplier * (activeOverclock ? 2 : 1));
         score += points;
-        const streakNote = streak >= 3 ? ` 🔥 ${streak} in a row!` : '';
+        const streakNote = streak >= 3 ? t('game1.inARow', { n: streak }) : '';
         completeQuestion('correct', `+${points}`, question.explanation + streakNote, choice);
     } else {
-        failedQuestions.push({ id: question.id, text: question.text, answer: question.answer, explanation: question.explanation });
+        failedQuestions.push(question);
         if (activeOverclock || !activeFirewall || choice === null) {
             streak = 0;
             multiplier = 1;
         }
-        const protection = activeFirewall && !activeOverclock && choice !== null ? ' 🛡️ Firewall kept your streak!' : '';
-        const answerLabel = question.answer === 'ai' ? 'AI 🤖' : 'Human 🧑';
-        completeQuestion(choice === null ? 'timeout' : 'wrong', '+0', `It was ${answerLabel}. ${question.explanation}${protection}`, choice);
+        const protection = activeFirewall && !activeOverclock && choice !== null ? t('game1.firewallKept', { name: abilities.firewall.name }) : '';
+        const itWas = t('game1.itWas', { answer: t(`common.${question.answer}`) });
+        completeQuestion(choice === null ? 'timeout' : 'wrong', '+0', itWas + question.explanation + protection, choice);
     }
 }
 
@@ -248,7 +381,9 @@ function nextQuestion() {
     if (phase !== 'feedback') return;
     stopFeedbackTimer();
     $('feedbackBar').hidden = true;
-    if (currentQuestionIndex < questions.length - 1) {
+    if (recoveryActive) {
+        showFinal();
+    } else if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
         loadQuestion();
     } else if (failedQuestions.length > 0) {
@@ -258,53 +393,65 @@ function nextQuestion() {
     }
 }
 
+// Second chance: a gift pop-up animation, then one missed question in the usual layout
 function startRecovery() {
-    phase = 'recovery';
+    phase = 'recovery-intro';
+    recoveryActive = true;
     recoveryQuestion = failedQuestions[Math.floor(Math.random() * failedQuestions.length)];
-    $('recoveryQuestionLabel').textContent = `Question ${recoveryQuestion.id}`;
-    $('recoveryText').textContent = recoveryQuestion.text;
-    $('recoveryModal').hidden = false;
+    resetAnswerBoxes(false);
+    renderAbilities();
+    showSecondChancePop();
+    setTimeout(loadRecoveryQuestion, SECOND_CHANCE_INTRO_MS);
+}
+
+// Full-screen orange takeover; restarting the CSS class replays it
+function showSecondChancePop() {
+    const pop = $('chancePop');
+    $('chancePopNote').textContent = t('game1.secondChanceNote', { n: SECOND_CHANCE_POINTS });
+    pop.classList.remove('show');
+    void pop.offsetWidth;
+    pop.classList.add('show');
+    playSound('power');
+}
+
+function loadRecoveryQuestion() {
+    phase = 'recovery';
+    $('questionCount').textContent = t('game1.bonusBadge');
+    showSuspect(recoveryQuestion);
+    resetAnswerBoxes(true);
+    renderAbilities();
+    startTimer();
 }
 
 function submitRecovery(choice) {
     if (phase !== 'recovery') return;
-    phase = 'complete';
-    $('recoveryHuman').disabled = true;
-    $('recoveryAi').disabled = true;
+    const bonus = SECOND_CHANCE_POINTS;
     if (choice === recoveryQuestion.answer) {
-        score += BASE_POINTS / 2;
+        score += bonus;
         recoveryResult = 'Recovered 50 points';
-        playSound('correct');
+        completeQuestion('correct', `+${bonus}`, t('game1.bonusWon') + recoveryQuestion.explanation, choice);
     } else {
         recoveryResult = 'Recovery missed';
-        playSound('wrong');
+        completeQuestion(choice === null ? 'timeout' : 'wrong', '+0', t('game1.itWas', { answer: t(`common.${recoveryQuestion.answer}`) }) + recoveryQuestion.explanation, choice);
     }
-    $('recoveryModal').hidden = true;
-    showFinal();
 }
 
 function showFinal() {
     phase = 'final';
     const perfect = failedQuestions.length === 0;
     const stars = correctAnswers >= 11 ? 3 : correctAnswers >= 7 ? 2 : correctAnswers >= 3 ? 1 : 0;
-    $('finalTitle').textContent = perfect ? 'Perfect score victory' : ['Nice try!', 'Good job!', 'Great job!', 'Amazing!'][stars];
-    $('finalStars').replaceChildren(...[0, 1, 2].map(i => {
-        const star = document.createElement('span');
-        star.textContent = '⭐';
-        if (i >= stars) star.className = 'off';
-        return star;
-    }));
-    $('finalSummary').textContent = perfect
-        ? 'You got all 12 questions right. You are a real AI detective!'
-        : `You got ${correctAnswers} out of ${questions.length} right. Ready for the live chat?`;
+    $('finalTitle').textContent = t(perfect ? 'game1.perfect' : `game1.stars${stars}`);
     $('finalScore').textContent = score;
     $('finalCorrect').textContent = correctAnswers;
     $('finalWrong').textContent = failedQuestions.length;
     $('finalRecovery').textContent = recoveryResult === 'Recovered 50 points' ? '+50' : recoveryResult === 'Recovery missed' ? '✗' : '–';
-    const next = new URLSearchParams({ player: playerName, avatar: playerAvatar, g1score: score, g1total: questions.length });
-    $('continueButton').href = `/pages/chat.html?${next.toString()}`;
-    $('finalModal').hidden = false;
+    $('finalScreen').hidden = false;
     playSound('win');
+    saveRound1Score();
+}
+
+// Save the final score to the leaderboard
+function saveRound1Score() {
     fetch('/api/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -325,8 +472,15 @@ if (!playerName || selectedAbilities.size !== 2) {
     $('playerAvatar').textContent = playerAvatar;
     beginGame();
 }
-$('answerHuman').addEventListener('click', () => submitAnswer('human'));
-$('answerAi').addEventListener('click', () => submitAnswer('ai'));
+const pickAnswer = choice => phase === 'recovery' ? submitRecovery(choice) : submitAnswer(choice);
+$('answerHuman').addEventListener('click', () => pickAnswer('human'));
+$('answerAi').addEventListener('click', () => pickAnswer('ai'));
 $('feedbackNextButton').addEventListener('click', nextQuestion);
-$('recoveryHuman').addEventListener('click', () => submitRecovery('human'));
-$('recoveryAi').addEventListener('click', () => submitRecovery('ai'));
+$('suspectMedia').addEventListener('click', openMediaViewer);
+$('mediaViewerClose').addEventListener('click', closeMediaViewer);
+$('mediaViewer').addEventListener('click', event => {
+    if (event.target === $('mediaViewer') || event.target === $('mediaViewerContent')) closeMediaViewer();
+});
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMediaViewer();
+});

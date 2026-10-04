@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess Who Am I?</title>
+    <style>
+        html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+        iframe { display: block; width: 100%; height: 100%; border: 0; }
+    </style>
+</head>
+
+<!-- Every screen loads inside this frame so full screen, which the browser drops on page navigation, survives moving between screens. -->
+<body>
+    <iframe id="screen" src="/pages/menu.html" title="Guess Who Am I?" allow="fullscreen; autoplay"></iframe>
+    <script>
+        const frame = document.getElementById('screen');
+        frame.addEventListener('load', () => {
+            try { document.title = frame.contentDocument.title || document.title; } catch {}
+            frame.focus();
+        });
+    </script>
+</body>
+
+</html>

@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "explain": "node scripts/explain-texts.js",
+    "list-texts": "node scripts/list-texts.js"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +15,6 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
-    "openai": "^7.20.0",
-    "socket.io": "^4.8.3"
+    "openai": "^7.20.0"
   }
 }

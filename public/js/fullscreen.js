@@ -1,24 +1,26 @@
-// Full-screen toggle for the top-right button (hidden where the browser can't do it, e.g. iPhone Safari).
+// Full screen for the whole app. Screens run inside the shell page's frame (see /shell.html), so full screen
+// is applied to the top-level page and stays on while the frame moves between screens.
 (function () {
-    const button = document.getElementById('fullscreenButton');
-    if (!button) return;
-    const root = document.documentElement;
-    if (!root.requestFullscreen) {
-        button.hidden = true;
-        return;
-    }
+    let topDoc = document;
+    try {
+        if (window.top.document) topDoc = window.top.document;
+    } catch {}
+    const root = topDoc.documentElement;
+    const supported = Boolean(root.requestFullscreen);
 
-    function sync() {
-        const on = Boolean(document.fullscreenElement);
-        button.classList.toggle('is-on', on);
-        button.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
-        button.title = on ? 'Exit full screen' : 'Full screen';
-    }
-
-    button.addEventListener('click', () => {
-        if (document.fullscreenElement) document.exitFullscreen();
-        else root.requestFullscreen().catch(() => {});
-    });
-    document.addEventListener('fullscreenchange', sync);
-    sync();
+    window.fullscreen = {
+        supported,
+        get on() { return Boolean(topDoc.fullscreenElement); },
+        set(on) {
+            if (!supported) return Promise.resolve();
+            if (on && !topDoc.fullscreenElement) return root.requestFullscreen();
+            if (!on && topDoc.fullscreenElement) return topDoc.exitFullscreen();
+            return Promise.resolve();
+        },
+        onChange(listener) {
+            topDoc.addEventListener('fullscreenchange', listener);
+            // The top page outlives this screen, so stop listening when the frame navigates away.
+            window.addEventListener('pagehide', () => topDoc.removeEventListener('fullscreenchange', listener));
+        }
+    };
 })();
