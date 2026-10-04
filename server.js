@@ -6,6 +6,18 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
+// Optional password for the whole site: when SITE_PASSWORD is set, the browser asks for it before anything loads.
+// Any user name works; only the password is checked.
+const SITE_PASSWORD = process.env.SITE_PASSWORD;
+if (SITE_PASSWORD) {
+    app.use((req, res, next) => {
+        const [scheme, encoded = ''] = (req.get('Authorization') || '').split(' ');
+        const password = scheme === 'Basic' ? Buffer.from(encoded, 'base64').toString().split(':').slice(1).join(':') : '';
+        if (password === SITE_PASSWORD) return next();
+        res.set('WWW-Authenticate', 'Basic realm="Guess Who Am I?"').status(401).send('Password required');
+    });
+}
+
 // Root serves the shell page, which shows each screen in a frame so full screen survives moving between screens
 // (must be BEFORE static middleware).
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shell.html')));
