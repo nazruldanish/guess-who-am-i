@@ -57,3 +57,26 @@ test('without a server (GitHub Pages) the leaderboard is kept on the device', as
     const board = JSON.parse(JSON.stringify(await window.leaderboard.load())).map(({ name, score }) => ({ name, score }));
     assert.deepEqual(board, [{ name: 'ALI', score: 1500 }, { name: 'Mei', score: 1200 }]);
 });
+
+test('with a Supabase key every device shares one online board', async () => {
+    const vm = require('node:vm');
+    const requests = [];
+    const window = { LEADERBOARD_CONFIG: { url: 'https://example.supabase.co', key: 'sb_publishable_test' } };
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../public/js/leaderboard.js'), 'utf8'), {
+        window,
+        fetch: async (url, options = {}) => {
+            requests.push({ url, method: options.method || 'GET', apikey: options.headers?.apikey, body: options.body && JSON.parse(options.body) });
+            return { ok: true, json: async () => [{ name: 'Mei', avatar: '🐼', score: 1200 }] };
+        },
+        localStorage: { getItem: () => null, setItem: () => assert.fail('should not fall back to the device board') },
+        Date
+    });
+
+    await window.leaderboard.save({ name: 'Mei', avatar: '🐼', score: 1200 });
+    const board = JSON.parse(JSON.stringify(await window.leaderboard.load()));
+    assert.deepEqual(board, [{ name: 'Mei', avatar: '🐼', score: 1200 }]);
+    assert.deepEqual(JSON.parse(JSON.stringify(requests)), [
+        { url: 'https://example.supabase.co/rest/v1/rpc/submit_score', method: 'POST', apikey: 'sb_publishable_test', body: { p_name: 'Mei', p_avatar: '🐼', p_score: 1200 } },
+        { url: 'https://example.supabase.co/rest/v1/leaderboard?select=name,avatar,score&order=score.desc,at.asc&limit=20', method: 'GET', apikey: 'sb_publishable_test' }
+    ]);
+});
