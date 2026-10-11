@@ -69,6 +69,25 @@
         '................'
     ];
 
+    const ROBOT = [
+        '......KKKK......',
+        '......KRRK......',
+        '.......KK.......',
+        '..KKKKKKKKKKKK..',
+        '.KGIGGGGGGGGGGK.',
+        'KKGGGGGGGGGGGGKK',
+        'KgGKKKKGGKKKKGgK',
+        'KgGKaaKGGKaaKGgK',
+        'KgGKAAKGGKAAKGgK',
+        'KgGKKKKGGKKKKGgK',
+        'KKGGGGGGGGGGGGKK',
+        '.KGGKKKKKKKKKGK.',
+        '.KGGKWKWKWKWKGK.',
+        '.KGGKKKKKKKKKGK.',
+        '.KggggggggggggK.',
+        '..KKKKKKKKKKKK..'
+    ];
+
     // Copy a base sprite, recolour it, then paint patches: [row, col, 'pixels'] where '_' keeps what is there
     function sprite(base, patches = [], recolor = {}) {
         const grid = base.map(row => [...row].map(ch => recolor[ch] || ch));
@@ -125,8 +144,17 @@
             [8, 0, 'KK'], [8, 14, 'KK'],
             [10, 6, 'KKKKK'], [9, 11, 'K']
         ], { Y: 'C', S: 'c', H: 'C' }),
+        '😎': sprite(FACE, [
+            // Black shades with a shine on each lens, and a cool half smile
+            [5, 1, 'KKKKKKKKKKKKKK'],
+            [6, 2, 'KWDDK'], [6, 9, 'KWDDK'], [7, 2, 'KDDDK'], [7, 9, 'KDDDK'], [8, 3, 'KKK'], [8, 10, 'KKK'],
+            [10, 10, 'K'], [11, 5, 'KKKKK']
+        ]),
+        '🤖': sprite(ROBOT),
+        // Retired choice: still drawn for old leaderboard scores, but no longer offered in the picker
         '💻': sprite(LAPTOP)
     };
+    const RETIRED_AVATARS = ['💻'];
 
     function toSvg(grid) {
         let rects = '';
@@ -145,8 +173,8 @@
 
     const SVGS = Object.fromEntries(Object.entries(SPRITES).map(([emoji, grid]) => [emoji, toSvg(grid)]));
 
-    // The avatar choices menu.js cycles through
-    window.AVATAR_OPTIONS = Object.keys(SVGS);
+    // The avatar choices shown in menu.js's picker
+    window.AVATAR_OPTIONS = Object.keys(SVGS).filter(emoji => !RETIRED_AVATARS.includes(emoji));
 
     // Results-screen icons (not avatar choices): a gold trophy for a win and a sweaty smile for a miss,
     // plus the second chance gift box
@@ -278,7 +306,7 @@
         return icon;
     };
 
-    const AVATAR_SELECTOR = '#avatarButton, #playerAvatar, .lb-avatar, .msg-avatar, .results-icon, .chance-pop-gift';
+    const AVATAR_SELECTOR = '#avatarButton, .avatar-option, #playerAvatar, .lb-avatar, .msg-avatar, .results-icon, .chance-pop-gift';
     function upgrade(root = document) {
         for (const el of root.querySelectorAll(AVATAR_SELECTOR)) {
             const emoji = el.textContent.trim();

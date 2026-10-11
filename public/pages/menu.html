@@ -39,12 +39,6 @@
             <span class="eyebrow mono" data-i18n="menu.eyebrow">Human vs AI · Detection game</span>
             <h1 class="logo" role="img" aria-label="Guess Who Am I?"></h1>
             <p class="tagline"><span data-i18n="menu.tagline">Some are real. Some are machine.</span> <strong data-i18n="menu.taglineStrong">Can you tell which is which?</strong></p>
-            <div class="rounds">
-                <div class="round-chip">
-                    <span class="mono" data-i18n="menu.round1Label">Round 01</span>
-                    <strong data-i18n="menu.round1Text">Spot the AI in texts, pictures and videos</strong>
-                </div>
-            </div>
         </section>
 
         <section class="player-card" data-i18n-attr="aria-label: menu.join">
@@ -52,7 +46,7 @@
                 <div class="avatar-ring">
                     <button type="button" class="avatar-btn" id="avatarButton" data-i18n-attr="aria-label: menu.changeAvatar">🦊</button>
                 </div>
-                <span class="avatar-hint mono" data-i18n="menu.avatarHint">Tap to change your avatar</span>
+                <span class="avatar-hint mono" data-i18n="menu.avatarHint">Tap to choose your avatar</span>
             </div>
 
             <div class="meter" aria-hidden="true">
@@ -73,6 +67,15 @@
             </button>
         </section>
     </main>
+
+    <div class="modal-backdrop" id="avatarModal" role="dialog" aria-modal="true" aria-labelledby="avatarTitle" hidden>
+        <div class="modal-card">
+            <button type="button" class="close-btn" id="avatarClose" data-i18n-attr="aria-label: common.close">✕</button>
+            <h1 id="avatarTitle" data-i18n="avatar.title">Choose your avatar</h1>
+            <p data-i18n="avatar.intro">Pick the one that feels most like you.</p>
+            <div class="avatar-grid" id="avatarGrid"></div>
+        </div>
+    </div>
 
     <div class="modal-backdrop" id="leaderboardModal" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle" hidden>
         <div class="modal-card leaderboard-card">

@@ -10,8 +10,8 @@ const SECOND_CHANCE_INTRO_MS = 2600;
 const abilities = window.ABILITY_DEFINITIONS;
 const { t, lang } = window.i18n;
 
-// 12 questions: 5 texts (one per topic), then 4 pictures, then 3 videos
-const QUESTION_MIX = [['text', 5], ['image', 4], ['video', 3]];
+// 15 questions: 5 texts (one per topic), then 5 pictures, then 5 videos
+const QUESTION_MIX = [['text', 5], ['image', 5], ['video', 5]];
 
 function shuffle(list) {
     const copy = [...list];

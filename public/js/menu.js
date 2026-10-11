@@ -10,6 +10,33 @@ function renderAvatar() {
     document.getElementById('avatarButton').textContent = AVATARS[avatarIndex];
 }
 
+function renderAvatarPicker() {
+    document.getElementById('avatarGrid').replaceChildren(...AVATARS.map((emoji, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'avatar-option' + (index === avatarIndex ? ' selected' : '');
+        button.setAttribute('aria-pressed', index === avatarIndex);
+        button.textContent = emoji;
+        button.addEventListener('click', () => {
+            avatarIndex = index;
+            renderAvatar();
+            closeAvatarPicker();
+        });
+        return button;
+    }));
+}
+
+function openAvatarPicker() {
+    renderAvatarPicker();
+    document.getElementById('avatarModal').hidden = false;
+    document.querySelector('#avatarGrid .selected')?.focus();
+}
+
+function closeAvatarPicker() {
+    document.getElementById('avatarModal').hidden = true;
+    document.getElementById('avatarButton').focus();
+}
+
 function renderLoadout() {
     const grid = document.getElementById('loadoutGrid');
     grid.replaceChildren();
@@ -123,9 +150,10 @@ document.getElementById('leaderboardButton').addEventListener('click', openLeade
 document.getElementById('leaderboardClose').addEventListener('click', () => {
     document.getElementById('leaderboardModal').hidden = true;
 });
-document.getElementById('avatarButton').addEventListener('click', () => {
-    avatarIndex = (avatarIndex + 1) % AVATARS.length;
-    renderAvatar();
+document.getElementById('avatarButton').addEventListener('click', openAvatarPicker);
+document.getElementById('avatarClose').addEventListener('click', closeAvatarPicker);
+document.getElementById('avatarModal').addEventListener('click', event => {
+    if (event.target === event.currentTarget) closeAvatarPicker();
 });
 document.getElementById('startButton').addEventListener('click', startGame);
 document.getElementById('clearNameButton').addEventListener('click', () => {

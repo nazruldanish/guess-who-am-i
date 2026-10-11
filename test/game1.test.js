@@ -111,21 +111,21 @@ test('name entry opens loadout on the same page before Round 1', () => {
     assert.match(window.location.href, /^game1\.html\?player=Tester&abilities=firewall%2Coverclock/);
 });
 
-test('12 correct answers go directly to perfect victory with streak points', () => {
+test('15 correct answers go directly to perfect victory with streak points', () => {
     const game = makeGame();
     assert.equal(game.run('selectedAbilities.size'), 2);
     assert.equal(game.get('gameShell').hidden, false);
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 15; i++) {
         game.run('submitAnswer(questions[currentQuestionIndex].answer)');
         game.run('nextQuestion()');
     }
     // Instant answers get full points: 5 texts (100, 100, 150, 150, 200 with the streak bonus),
-    // 4 pictures at 2x 125 and 3 videos at 2x 150
-    assert.equal(game.run('score'), 2600);
+    // 5 pictures at 2x 125 and 5 videos at 2x 150
+    assert.equal(game.run('score'), 3450);
     assert.equal(game.run('failedQuestions.length'), 0);
     assert.equal(game.get('finalTitle').textContent, 'Perfect score victory');
     assert.equal(game.run('recoveryActive'), false);
-    assert.deepEqual(game.posts, [{ url: '../api/leaderboard', body: { name: 'Tester', avatar: '🙂', score: 2600 } }]);
+    assert.deepEqual(game.posts, [{ url: '../api/leaderboard', body: { name: 'Tester', avatar: '🙂', score: 3450 } }]);
 });
 
 test('right answers are worth more the faster they come: full points down to half at the buzzer', () => {
@@ -141,8 +141,8 @@ test('right answers are worth more the faster they come: full points down to hal
     assert.equal(answerWithTimeLeft(2, 0), 50, 'text, at the buzzer');
     assert.equal(answerWithTimeLeft(5, 10000), 125, 'picture, instant');
     assert.equal(answerWithTimeLeft(6, 5000), 95, 'picture, halfway (93.75 rounds to 95)');
-    assert.equal(answerWithTimeLeft(9, 10000), 150, 'video, instant');
-    assert.equal(answerWithTimeLeft(10, 0), 75, 'video, at the buzzer');
+    assert.equal(answerWithTimeLeft(10, 10000), 150, 'video, instant');
+    assert.equal(answerWithTimeLeft(11, 0), 75, 'video, at the buzzer');
 });
 
 test('time freeze locks the points at the moment it is used', () => {
@@ -156,11 +156,11 @@ test('time freeze locks the points at the moment it is used', () => {
 
 test('many misses permit exactly one recovery worth 50 points', () => {
     const game = makeGame('firewall,override');
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 15; i++) {
         game.run("submitAnswer(questions[currentQuestionIndex].answer === 'human' ? 'ai' : 'human')");
         game.run('nextQuestion()');
     }
-    assert.equal(game.run('failedQuestions.length'), 12);
+    assert.equal(game.run('failedQuestions.length'), 15);
     assert.equal(game.run('phase'), 'recovery-intro');
     assert.match(game.get('chancePopNote').textContent, /\+50/);
     game.run('submitRecovery(recoveryQuestion.answer)');
@@ -252,20 +252,20 @@ test('Next button skips feedback countdown without advancing twice', () => {
     assert.equal(game.run('currentQuestionIndex'), 1);
 });
 
-test('each game has 5 texts from different topics, 4 pictures and 3 videos, never all AI or all human per type', () => {
+test('each game has 5 texts from different topics, 5 pictures and 5 videos, never all AI or all human per type', () => {
     for (let run = 0; run < 50; run++) {
         const game = makeGame();
         const questions = JSON.parse(game.run('JSON.stringify(questions)'));
-        assert.deepEqual(questions.map(q => q.type), [...Array(5).fill('text'), ...Array(4).fill('image'), ...Array(3).fill('video')]);
+        assert.deepEqual(questions.map(q => q.type), [...Array(5).fill('text'), ...Array(5).fill('image'), ...Array(5).fill('video')]);
         const topics = questions.filter(q => q.type === 'text').map(q => q.label);
         assert.equal(new Set(topics).size, 5, 'one text per topic');
-        assert.deepEqual(questions.map(q => q.id), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+        assert.deepEqual(questions.map(q => q.id), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
         for (const type of ['text', 'image', 'video']) {
             const answers = questions.filter(q => q.type === type).map(q => q.answer);
             assert.ok(answers.includes('ai') && answers.includes('human'), `${type}: ${answers}`);
         }
         const sources = questions.filter(q => q.type !== 'text').map(q => q.src);
-        assert.equal(new Set(sources).size, 7, 'no repeated media');
+        assert.equal(new Set(sources).size, 10, 'no repeated media');
         for (const q of questions) {
             const key = q.type === 'text' ? 'text' : 'src';
             const pool = q.type === 'text' ? MEDIA.text.en : MEDIA[q.type];
@@ -276,14 +276,14 @@ test('each game has 5 texts from different topics, 4 pictures and 3 videos, neve
 
 test('picture and video questions show muted media that can be enlarged', () => {
     const game = makeGame();
-    game.run('currentQuestionIndex = 9; loadQuestion()');
+    game.run('currentQuestionIndex = 10; loadQuestion()');
     assert.equal(game.get('suspectText').hidden, true);
     assert.equal(game.get('suspectMedia').hidden, false);
     const video = game.get('suspectMedia').children[0];
     assert.equal(video.muted, true);
-    assert.equal(video.src, game.run('questions[9].src'));
+    assert.equal(video.src, game.run('questions[10].src'));
     assert.equal(game.get('answerHeading').textContent, 'Who made this video?');
-    assert.equal(game.get('suspectHeading').textContent, game.run('questions[9].label'));
+    assert.equal(game.get('suspectHeading').textContent, game.run('questions[10].label'));
     game.get('suspectMedia').click();
     assert.equal(game.get('mediaViewer').hidden, false);
     assert.equal(game.get('mediaViewerContent').children[0].muted, true);

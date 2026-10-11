@@ -17,8 +17,10 @@
             'common.ai': 'AI',
 
             'menu.join': 'Join the game',
-            'menu.changeAvatar': 'Change your avatar',
-            'menu.avatarHint': 'Tap to change your avatar',
+            'menu.changeAvatar': 'Choose your avatar',
+            'menu.avatarHint': 'Tap to choose your avatar',
+            'avatar.title': 'Choose your avatar',
+            'avatar.intro': 'Pick the one that feels most like you.',
             'menu.nickname': 'Your nickname',
             'menu.nicknamePlaceholder': 'Enter nickname',
             'menu.clearName': 'Clear name',
@@ -31,7 +33,6 @@
             'menu.tagline': 'Some are real. Some are machine.',
             'menu.taglineStrong': 'Can you tell which is which?',
             'menu.round1Label': 'Round 01',
-            'menu.round1Text': 'Spot the AI in texts, pictures and videos',
 
             'leaderboard.eyebrow': 'Top detectives',
             'leaderboard.empty': 'No scores yet. Be the first!',
@@ -134,8 +135,10 @@
             'common.ai': 'AI',
 
             'menu.join': 'Sertai permainan',
-            'menu.changeAvatar': 'Tukar avatar anda',
-            'menu.avatarHint': 'Tekan untuk tukar avatar',
+            'menu.changeAvatar': 'Pilih avatar anda',
+            'menu.avatarHint': 'Tekan untuk pilih avatar',
+            'avatar.title': 'Pilih avatar anda',
+            'avatar.intro': 'Pilih yang paling menggambarkan diri anda.',
             'menu.nickname': 'Nama panggilan anda',
             'menu.nicknamePlaceholder': 'Masukkan nama panggilan',
             'menu.clearName': 'Padam nama',
@@ -148,7 +151,6 @@
             'menu.tagline': 'Ada yang manusia. Ada yang mesin.',
             'menu.taglineStrong': 'Boleh anda bezakan?',
             'menu.round1Label': 'Pusingan 01',
-            'menu.round1Text': 'Cari AI dalam teks, gambar dan video',
 
             'leaderboard.eyebrow': 'Detektif terhebat',
             'leaderboard.empty': 'Belum ada markah lagi. Jadilah yang pertama!',
